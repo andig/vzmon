@@ -1,16 +1,16 @@
 // path to your VZ middleware
-var vzAPI = "http://localhost/middleware.php";
+var vzAPI = "http://cpuidle.dyndns.org:8038/middleware.php";
 
 // path to forecast.io API
-var API_KEY = ""; // goto forecast.io to obtain your own API key
-var COORDINATES = "52.0,9.0";           // your geo coordinates - find out by using Google Maps
+var API_KEY = "80c67e7668109f400e20c9dcc5ec0e16"; // goto forecast.io to obtain your own API key
+var COORDINATES = "52.283228,9.837533";           // your geo coordinates - find out by using Google Maps
 
 var weatherAPI = "https://api.forecast.io/forecast/" + API_KEY + "/" + COORDINATES + "?units=ca&exclude=flags,alerts,minutely";
 
 // VZ channel information
 var channels = {
   generation: {
-    name: "Generation",
+    name: "Generation", 
     totalValue: 8840.0,
     totalAtDate: "1.4.2013"
   }
@@ -41,17 +41,17 @@ var plotOptions = {
     fitPointDist: 0.1 },
   xaxis: {
     mode: 'time',
-    timezone: 'browser',
-  	minTickSize: [1, "hour"],
+    timezone: 'browser', 
+  	minTickSize: [1, "hour"], 
   	timeformat: "%H:%M",
   	},
   yaxis: {
-  	maxTickSize: 1,
-    transform: function(v) { return -v; },
-  	inverseTransform: function(v) { return -v; }
+  	maxTickSize: 1, 
+    transform: function(v) { return -v; },  
+  	inverseTransform: function(v) { return -v; } 
   	},
   grid: {
-    backgroundColor: {
+    backgroundColor: { 
       colors: ['#ffffff', '#ffffff'] },
     borderWidth: {
       top: 0,
