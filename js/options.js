@@ -1,9 +1,9 @@
 // path to your VZ middleware
-var vzAPI = "http://localhost/middleware.php";
+var vzAPI = "http://cpuidle.dyndns.org:8038/middleware.php";
 
 // path to forecast.io API
-var API_KEY = ""; // goto forecast.io to obtain your own API key
-var COORDINATES = "52.0,9.0";           // your geo coordinates - find out by using Google Maps
+var API_KEY = "80c67e7668109f400e20c9dcc5ec0e16"; // goto forecast.io to obtain your own API key
+var COORDINATES = "52.283228,9.837533";           // your geo coordinates - find out by using Google Maps
 
 var weatherAPI = "https://api.forecast.io/forecast/" + API_KEY + "/" + COORDINATES + "?units=ca&exclude=flags,alerts,minutely";
 
