@@ -1,0 +1,90 @@
+/* general settings */
+@font-face {
+  font-family: "AvenirNextCondensed";
+  src: url("../fonts/AvenirNextLTPro-Cn.otf") format("opentype");
+}
+* {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box; }
+body {
+  font-family: AvenirNextCondensed, "Arial Narrow", Arial, Helvetica;
+  font-weight: normal;
+  font-style: normal;
+}
+/* helper classes */
+.hidden {
+  display: none; }
+.inline-block {
+  display: inline-block; }
+.right {
+  text-align: right; }
+.center {
+  text-align: center; 
+  margin: 0 auto; }
+.nowrap {
+  white-space: nowrap; }
+
+/* debug classes */
+/*    div {
+  border: 1px dashed red!important;
+}
+h1, h2 {
+  border: 1px solid green!important;
+}*/
+
+/* special objects */
+#weather-icon {
+  display: block;
+  float: left;
+  margin: 0 10px 20px 0;
+}
+#flot {
+  margin: 0px auto;
+  margin-bottom: 10px;
+  max-width: 300px;
+  height: 200px;
+}
+
+/* page formatting */
+.row {
+    width: 100%;
+    margin: 0px auto;
+    max-width: 300px;
+}
+.w-300, .w-150, .w-100 {
+  overflow: visible; 
+  display: inline-block; }
+  .w-300 {
+    width: 300px !important; }
+  .w-150 {
+    width: 150px !important; }
+  .w-100 {
+    width: 100px !important; }
+
+/* styles */
+h1, h2 {
+  font-family: AvenirNextCondensed, "Arial Narrow", Arial, Helvetica;
+}
+h1 {
+  font-weight: bold;
+  font-style: normal;
+  font-size: 38.25px;
+  margin: 0;
+  line-height: 1em; 
+}
+h2 {
+  margin: 3px 0 3px 0;
+  color: #444; 
+}
+h2, .unit {
+  font-size: 22px;
+  font-weight: normal; 
+}
+.largeValue {
+  display: block;
+  vertical-align: top;
+  font-size: 72px;
+  font-weight: bold;
+  line-height: 72px;
+}
