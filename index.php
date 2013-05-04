@@ -4,7 +4,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" encoding="en">
 <head>
-	<title>PVmon</title>
+	<title>VZmon</title>
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type"> 
 	<meta content="utf-8" http-equiv="encoding">
 <?php if ($browser == 'iphone') { ?>
@@ -14,11 +14,16 @@
 	<link rel="apple-touch-icon" sizes="57x57" href="img/home-57.png" />
 	<link rel="apple-touch-icon" sizes="72x72" href="img/home-72.png" />
 	<link rel="apple-touch-icon" sizes="114x114" href="img/home-114.png" />
-	<link rel="apple-touch-startup-image" href="img/startup.png" />	
+	<!-- iPhone -->
+	<link rel="apple-touch-startup-image" href="img/startup-320x480.png" media="screen and (max-device-width: 320px)">
+	<!-- iPhone (Retina) -->
+	<link rel="apple-touch-startup-image" href="img/startup-640x960.png" media="screen and (device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)">
+	<!-- iPhone 5 -->
+	<link rel="apple-touch-startup-image" href="img/startup-640x1136.png" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
 <?php } else { ?>
 	<meta name="viewport" content="width=device-width" />
 <?php } ?>
-	<link rel="shortcut icon" href="../vz/favicon.ico" type="image/ico" />
+	<link rel="shortcut icon" href="img/favicon.ico" type="image/ico" />
 
 	<!-- css -->
 	<link rel="stylesheet" href="css/pvmon.css" type="text/css" />
@@ -108,6 +113,9 @@
 // UUIDs
 var uuid_bezug, uuid_lief, uuid_gen;
 
+// forecast.io weather icons
+var icons;
+
 function updateDials() {
 	$.when(
 		$.getJSON(vzAPI + "/data/" + uuid_bezug + ".json?padding=?" + "&from=today&to=now").fail(failHandler),
@@ -156,6 +164,17 @@ function updatePlot() {
 	});
 }
 
+function updateDatabaseStatus() {
+	var formatTotals = {array:true, decimals:0, si:false, unit:'kWh'};
+	$.getJSON(vzAPI + "/capabilities.json?padding=?&section=database", function(json) {
+		console.log(json.capabilities.database);
+		$("#database").html(Mustache.render($("#templateDatebase").html(), {
+			dbrows: formatNumber(json.capabilities.database.rows / 1000, {decimals:0, si:false}),
+			dbsize: formatNumber(json.capabilities.database.size / 1024 / 1024, {decimals:1, si:false})
+		}));
+	}).fail(failHandler);
+}
+
 function updateWeather() {
 	$.getJSON(weatherAPI + "&callback=?", function(forecast) {
 		// console.log(forecast);
@@ -172,7 +191,7 @@ function updateWeather() {
 }
 
 $(document).ready(function() {
-	var icons = new Skycons();
+	icons = new Skycons();
 
 	plotOptions.yaxis.tickFormatter = unitFormatter;
 	$.plot($("#flot"), [{data:[]}], plotOptions);
@@ -193,6 +212,10 @@ $(document).ready(function() {
 			// console.log(json_bezug[0]);
 			channels.bezug.totalValue += Math.abs(json_bezug[0].data.consumption) / 1000.0;
 			channels.generation.totalValue += Math.abs(json_gen[0].data.consumption) / 1000.0;
+
+			console.log(channels.generation.totalValue);
+			console.log(json_gen[0].data.consumption);
+			console.log(channels.generation.totalValue);
 
 			updateDials();
 		});

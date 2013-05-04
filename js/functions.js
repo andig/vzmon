@@ -87,3 +87,7 @@ function mapWeatherIcon(icon) {
 		default: return(Skycons.CLEAR_DAY);
     }
 }
+
+function cloudCover(e) {
+  return e.cloudCover < .2 ? 0 : e.cloudCover <.8 ? 1 : 2;
+}
