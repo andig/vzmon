@@ -13,12 +13,12 @@ var channels = {
     name: "Generation", 
     totalValue: 8840.0,
     totalAtDate: "1.4.2013"
-  }
+  },
   bezug: {
     name: "Bezug",
     totalValue: 3152.0,
     totalAtDate: "1.4.2013"
-  }
+  },
   lieferung: {
     name: "Lieferung"
   }
