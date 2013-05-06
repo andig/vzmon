@@ -77,7 +77,7 @@
 	<div class="row nowrap" style="margin-top: 5px;">
 		<div class="w-150">
 			<h2>Solar generation</h2>
-			<div id="generation" class="largeValue">- <span class="unit">kW</span></div>
+			<div id="generationNow" class="largeValue">- <span class="unit">kW</span></div>
 		</div><!-- 
 	 --><div class="w-150">
 			<div id="generationToday">
@@ -96,7 +96,7 @@
 	<div class="row nowrap">
 		<div class="w-150">
 			<h2>Usage</h2>
-			<div id="bezug" class="largeValue">- <span class="unit">kW</span></div>
+			<div id="bezugNow" class="largeValue">- <span class="unit">kW</span></div>
 		</div><!-- 
 	 --><div class="w-150">
 			<div id="bezugToday">
@@ -108,60 +108,50 @@
 		</div>
 	</div>
 
+	<div class="row nowrap">
+		<div class="w-150">
+			<h2>Supply</h2>
+			<div id="lieferungNow" class="largeValue">- <span class="unit">kW</span></div>
+		</div><!-- 
+	 --><div class="w-150">
+			<div id="lieferungToday">
+		 		<h1 class="right">- <span class="unit">kWh today</span></h1>
+			</div><!-- 
+		 --><div id="lieferungTotal" class="right">
+		 		<h1 class="right">- <span class="unit">kWh total</span></h1>
+		 	</div>
+		</div>
+	</div>
+
 <script type="text/javascript">
 
 // UUIDs
-var uuid_bezug, uuid_lief, uuid_gen;
+var uuid = {};
 
 // forecast.io weather icons
 var icons;
 
-function updateDials() {
-	$.when(
-		$.getJSON(vzAPI + "/data/" + uuid_bezug + ".json?padding=?" + "&from=today&to=now").fail(failHandler),
-		$.getJSON(vzAPI + "/data/" + uuid_gen + ".json?padding=?" + "&from=today&to=now").fail(failHandler),
-		$.getJSON(vzAPI + "/data/" + uuid_lief + ".json?padding=?" + "&from=today&to=now").fail(failHandler)
-	).done(function(json_bezug, json_lief, json_gen) {
-		// console.log(json_bezug[0], json_lief[0], json_gen[0]);
+function updateWeather() {
+	$.getJSON(weatherAPI + "&callback=?", function(forecast) {
+		// console.log(forecast);
+		forecast.currently.temperature = Math.round(forecast.currently.temperature);
 
-		var bezug = json_bezug[0].data.tuples[json_bezug[0].data.tuples.length-1][1];
-		var gen = -json_gen[0].data.tuples[json_gen[0].data.tuples.length-1][1];   // pos.
-		// var lief = -json_lief[0].data.tuples[json_lief[0].data.tuples.length-1][1]; // pos.
-		// var netto = lief - bezug;
-		// var gesamt = bezug + gen - lief;
+		if (typeof forecast.daily.data[0] !== "undefined") {
+			// xaxis minimum		
+			console.info("[updateWeather] Sunrise: " + forecast.daily.data[0].sunriseTime);
+			plotOptions.xaxis.min = Math.floor(forecast.daily.data[0].sunriseTime / 3600) * 3600 * 1000;
+			options.sunriseTime = new Date(forecast.daily.data[0].sunriseTime * 1000).getUTCHours() + ":00";
 
-        // current values
-		$("#bezug").html(Mustache.render($("#templateNow").html(), formatNumber(bezug, formatCurrent)));
-		$("#generation").html(Mustache.render($("#templateNow").html(), formatNumber(gen, formatCurrent)));
+			// xaxis maximum
+			console.info("[updateWeather] Sunset: " + forecast.daily.data[0].sunsetTime);
+			plotOptions.xaxis.max = Math.ceil(forecast.daily.data[0].sunsetTime / 3600) * 3600 * 1000;
+		}
 
-        // daily values
-		$("#bezugToday").html(Mustache.render($("#templateToday").html(), formatNumber(json_bezug[0].data.consumption, formatConsumption)));
-		$("#generationToday").html(Mustache.render($("#templateToday").html(), formatNumber(-json_gen[0].data.consumption, formatConsumption)));
+		$("#weather").html(Mustache.render($("#templateWeather").html(), forecast));
 
-		// totals
-		$("#bezugTotal").html(Mustache.render($("#templateTotal").html(), formatNumber(channels.bezug.totalValue + json_bezug[0].data.consumption/1000.0, formatTotals)));
-		$("#generationTotal").html(Mustache.render($("#templateTotal").html(), formatNumber(channels.generation.totalValue - json_gen[0].data.consumption/1000.0, formatTotals)));
-	});			
-}
-
-function updatePlot() {
-	$.when(
-		$.getJSON(vzAPI + "/data/" + uuid_bezug + ".json?padding=?" + "&from=5:00&to=now&tuples=100").fail(failHandler),
-		$.getJSON(vzAPI + "/data/" + uuid_lief + ".json?padding=?" + "&from=5:00&to=now&tuples=100").fail(failHandler)
-		// $.getJSON(vzAPI + "/data/" + uuid_gen + ".json?padding=?" + "&from=today&to=now").fail(failHandler)
-	).done(function(json_bezug, json_lief, json_gen) {
-		// console.log(json_bezug, json_lief, json_gen);
-
-		json_bezug[0].data.tuples.shift();
-		json_lief[0].data.tuples.shift();
-
-		var series = [
-			{ data: json_bezug[0].data.tuples, color: "#666" }, // e61703
-			{ data: json_lief[0].data.tuples, color: "#222" }, // 046b34
-		];
-
-		$.plot($("#flot"), series, plotOptions);
-	});
+		icons.set($("#weather-icon").get(0), mapWeatherIcon(forecast.currently.icon));
+		icons.play();
+	}).fail(failHandler);
 }
 
 function updateDatabaseStatus() {
@@ -175,67 +165,112 @@ function updateDatabaseStatus() {
 	}).fail(failHandler);
 }
 
-function updateWeather() {
-	$.getJSON(weatherAPI + "&callback=?", function(forecast) {
-		// console.log(forecast);
-		forecast.currently.temperature = Math.round(forecast.currently.temperature);
+function updateValues() {
+	for (var prop in channels) {
+		$.getJSON(vzAPI + "/data/" + uuid[prop] + ".json?padding=?&from=today&to=now",
+			$.proxy(function(json) {
+				// console.info(json);
+				if (typeof json.data == "undefined") {
+	 				console.error("[updateValues] No current data for channel " + this._prop);
+	 				return;
+	 			}
+				if (typeof json.data.tuples == "undefined") {
+	 				console.error("[updateValues] No current data.tuples for channel " + this._prop);
+	 				return;
+	 			}
+				if (typeof json.data.consumption == "undefined") {
+	 				console.error("[updateValues] No current data.consumption for channel " + this._prop);
+	 				return;
+	 			}
 
-		plotOptions.xaxis.min = Math.floor(forecast.daily.data[0].sunriseTime / 3600) * 3600 * 1000;
-		plotOptions.xaxis.max = Math.ceil(forecast.daily.data[0].sunsetTime / 3600) * 3600 * 1000;
+				$("#" + this._prop + "Now").html(Mustache.render($("#templateNow").html(), 
+					formatNumber((channels[this._prop].sign || +1) * json.data.tuples[json.data.tuples.length-1][1], formatCurrent)));
+				$("#" + this._prop + "Today").html(Mustache.render($("#templateToday").html(), 
+					formatNumber(Math.abs(json.data.consumption), formatConsumption)));
+				$("#" + this._prop + "Total").html(Mustache.render($("#templateTotal").html(), 
+					formatNumber((channels[this._prop].totalValue || 0) + Math.abs(json.data.consumption/1000.0), formatTotals)));
+			}, {_prop: prop})
+		).fail(failHandler);
+	}	
+}
 
-		$("#weather").html(Mustache.render($("#templateWeather").html(), forecast));
+function updatePlot() {
+	$.when(
+		$.getJSON(vzAPI + "/data/" + uuid.bezug + ".json?padding=?&from=" + options.sunriseTime + "&to=now&tuples=100"),
+		$.getJSON(vzAPI + "/data/" + uuid.generation + ".json?padding=?&from=" + options.sunriseTime + "&to=now&tuples=100")
+	).done(function(json_bezug, json_generation) {
+		// console.info(json_bezug[0], json_generation[0]);
+		if (typeof json_bezug[0].data.tuples == "undefined") {
+			console.error("[updatePlot] No consumption data.tuples for channel " + uuid.bezug);
+			return;
+		}		
+		if (typeof json_generation[0].data.tuples == "undefined") {
+			console.error("[updatePlot] No consumption data.tuples for channel " + uuid.generation);
+			return;
+		}
 
-		icons.set($("#weather-icon").get(0), mapWeatherIcon(forecast.currently.icon));
-		icons.play();
+		json_bezug[0].data.tuples.shift();
+		json_generation[0].data.tuples.shift();
+
+		var series = [
+			{ data: json_bezug[0].data.tuples, color: channels.bezug.color || "#666" }, // e61703
+			{ data: json_generation[0].data.tuples, color: channels.generation.color || "#222" }, // 046b34
+		];
+
+		$.plot($("#flot"), series, plotOptions);
 	}).fail(failHandler);
 }
 
 $(document).ready(function() {
 	icons = new Skycons();
 
+	// plot formatting
+	if (typeof channels.generation.sign !== "undefined" && channels.generation.sign < 0) {
+		plotOptions.yaxis.transform = plotTransform;
+		plotOptions.yaxis.inverseTransform = plotInverseTransform;
+	}
 	plotOptions.yaxis.tickFormatter = unitFormatter;
 	$.plot($("#flot"), [{data:[]}], plotOptions);
 
 	$.getJSON(vzAPI +"/channel.json?padding=?", function(json) {
- 		// get UUIDs
-		uuid_bezug = getUUID(json, "Bezug");
-		uuid_lief = getUUID(json, "Lieferung");
-		uuid_gen = getUUID(json, "Erzeugung");
-		// console.log("Bezug: " + uuid_bezug);
-		// console.log("Lief: " + uuid_lief);
-		// console.log("Gen: " + uuid_gen);
+ 		// get UUIDs for defined channels
+ 		for (var prop in channels) {
+ 			// console.info("Channel " + prop);
+ 			uuid[prop] = getUUID(json, channels[prop].name);
+ 			console.info("[init] UUID " + uuid[prop] + " " + prop);
 
-		$.when(
-			$.getJSON(vzAPI + "/data/" + uuid_bezug + ".json?padding=?" + "&from=" + channels.bezug.totalAtDate + "&to=today&tuples=1").fail(failHandler),
-			$.getJSON(vzAPI + "/data/" + uuid_gen + ".json?padding=?" + "&from=" + channels.generation.totalAtDate + "&to=today&tuples=1").fail(failHandler)
-		).done(function(json_bezug, json_gen) {
-			// console.log(json_bezug[0]);
-			channels.bezug.totalValue += Math.abs(json_bezug[0].data.consumption) / 1000.0;
-			channels.generation.totalValue += Math.abs(json_gen[0].data.consumption) / 1000.0;
+ 			// do a one-time update of the totals if defined
+ 			if (channels[prop].totalAtDate !== "undefined") {
+	 			$.getJSON(vzAPI + "/data/" + uuid[prop] + ".json?padding=?&from=" + channels[prop].totalAtDate + "&to=today&tuples=1",
+	 				$.proxy(function(json) {
+			 			// console.info(json);
+			 			if (typeof json.data.consumption == "undefined") {
+			 				console.error("[init] No consumption data for channel " + this._prop);
+			 				return;
+			 			}
 
-			console.log(channels.generation.totalValue);
-			console.log(json_gen[0].data.consumption);
-			console.log(channels.generation.totalValue);
-
-			updateDials();
-		});
+		 				channels[this._prop].totalValue = (channels[this._prop].totalValue || 0) + Math.abs(json.data.consumption) / 1000.0;
+		 				updateValues();
+		 			}, {_prop: prop})
+		 		).fail(failHandler);
+	 		}
+ 		}
 
 		var refreshFunction = function() {
-			updateDials();
-			updatePlot();
 			updateWeather();
+			updateValues();
+			updatePlot();
 			return(false);
 		}
 
 		// run
 		refreshFunction();
-		setInterval(refreshFunction, 60*1000); // 60s
+		setInterval(refreshFunction, (options.updateInterval || 1) * 60 * 1000); // 60s
 		$("#refresh").click(refreshFunction);
  	}).fail(failHandler);
  });
 
 </script>
-
 
 </body>
 </html>
