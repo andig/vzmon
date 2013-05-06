@@ -3,26 +3,40 @@ var vzAPI = "http://localhost/middleware.php";
 
 // path to forecast.io API
 var API_KEY = ""; // goto forecast.io to obtain your own API key
-var COORDINATES = "52.0,9.0";           // your geo coordinates - find out by using Google Maps
+var COORDINATES = "52.,9.";           // your geo coordinates - find out by using Google Maps
 
 var weatherAPI = "https://api.forecast.io/forecast/" + API_KEY + "/" + COORDINATES + "?units=ca&exclude=flags,alerts,minutely";
+
+// general options
+var options = {
+  updateInterval: 1, // minutes
+  sunriseTime: "5:00", // chart min. x axis
+}
 
 // VZ channel information
 var channels = {
   generation: {
-    name: "Generation", 
+    name: "Erzeugung", 
+    color: "#222",
+    sign: -1,
     totalValue: 8840.0,
     totalAtDate: "1.4.2013"
   },
   bezug: {
     name: "Bezug",
+    color: "#888",
     totalValue: 3152.0,
     totalAtDate: "1.4.2013"
   },
   lieferung: {
-    name: "Lieferung"
+    name: "Lieferung",
+    sign: -1,
+    totalValue: 7418.0,
+    totalAtDate: "1.4.2013"
   }
 }
+
+// changes below this line should not be necessary
 
 // number formatting
 var formatCurrent = {array:true, pretty:true, si:true, unit:'W'},
@@ -47,8 +61,6 @@ var plotOptions = {
   	},
   yaxis: {
   	maxTickSize: 1, 
-    transform: function(v) { return -v; },  
-  	inverseTransform: function(v) { return -v; } 
   	},
   grid: {
     backgroundColor: { 
