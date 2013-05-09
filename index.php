@@ -2,7 +2,7 @@
 	$browser = (strpos($_SERVER['HTTP_USER_AGENT'],"iPhone")) ? 'iphone' : ''; 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" encoding="en">
+<html xmlns="http://www.w3.org/1999/xhtml" encoding="en" <?php if ($browser == 'iphone') { ?> manifest="manifest.appcache" <?php } ?>>
 <head>
 	<title>VZmon</title>
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type"> 
@@ -38,7 +38,7 @@
 	<link rel="shortcut icon" href="img/favicon.ico" type="image/ico" />
 
 	<!-- css -->
-	<link rel="stylesheet" href="css/pvmon.css" type="text/css" />
+	<link rel="stylesheet" href="css/vzmon.css" type="text/css" />
 
 	<!-- js -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script> 

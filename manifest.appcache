@@ -1,0 +1,24 @@
+CACHE MANIFEST
+# version 3
+
+./index.php
+./img/favicon.ico
+
+./css/vzmon.css
+./fonts/AvenirNextLTPro-Cn.otf
+
+# scripts
+
+./js/flot/jquery.flot.js
+./js/flot/jquery.flot.time.js
+./js/curvedLines.js
+
+./js/mustache.js
+./js/skycons.js
+
+./js/functions.js
+#./js/options.js
+
+# external scripts
+
+http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js
