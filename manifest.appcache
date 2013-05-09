@@ -3,6 +3,8 @@ CACHE MANIFEST
 
 ./index.php
 ./img/favicon.ico
+./img/startup.png
+./img/startup@2x.png
 
 ./css/vzmon.css
 ./fonts/AvenirNextLTPro-Cn.otf
@@ -17,8 +19,11 @@ CACHE MANIFEST
 ./js/skycons.js
 
 ./js/functions.js
-#./js/options.js
+./js/options.js
 
 # external scripts
 
 http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js
+
+NETWORK:
+*
