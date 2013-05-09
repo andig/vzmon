@@ -11,15 +11,27 @@
 	<!-- iPhone settings -->
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 	<meta name="apple-mobile-web-app-capable" content="yes">
+
 	<link rel="apple-touch-icon" sizes="57x57" href="img/home-57.png" />
 	<link rel="apple-touch-icon" sizes="72x72" href="img/home-72.png" />
 	<link rel="apple-touch-icon" sizes="114x114" href="img/home-114.png" />
+
+	<!-- Startup images --> 
+	<!-- Source: https://gist.github.com/tfausak/2222823 -->
+
+	<!-- iPhone - iPod touch - 320x460 --> 
+	<link rel="apple-touch-startup-image" href="img/startup.png" media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 1)">
+	<!-- iPhone - iPod (Retina) - 640x920 --> 
+	<link rel="apple-touch-startup-image" href="img/startup@2x.png" media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)">
+	<!-- iPhone 5 - iPod 5 (Retina) - 640x1096 --> 
+	<link rel="apple-touch-startup-image" href="img/startup-568h@2x.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+
 	<!-- iPhone -->
-	<link rel="apple-touch-startup-image" href="img/startup-320x480.png" media="screen and (max-device-width: 320px)">
+	<!-- <link rel="apple-touch-startup-image" href="img/startup-320x480.png" media="screen and (max-device-width: 320px)"> -->
 	<!-- iPhone (Retina) -->
-	<link rel="apple-touch-startup-image" href="img/startup-640x960.png" media="screen and (device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)">
+	<!-- <link rel="apple-touch-startup-image" href="img/startup-640x960.png" media="screen and (device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)"> -->
 	<!-- iPhone 5 -->
-	<link rel="apple-touch-startup-image" href="img/startup-640x1136.png" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+	<!-- <link rel="apple-touch-startup-image" href="img/startup-640x1136.png" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)"> -->
 <?php } else { ?>
 	<meta name="viewport" content="width=device-width" />
 <?php } ?>
