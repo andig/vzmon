@@ -95,4 +95,3 @@ function cloudCover(e) {
 // plot axis formatting
 function plotTransform(v) { return -v; }
 function plotInverseTransform(v) { return -v; }
-

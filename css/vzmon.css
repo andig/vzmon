@@ -72,6 +72,7 @@ h1 {
   font-size: 38.25px;
   margin: 0;
   line-height: 1em; 
+  direction: rtl; /* overflow to left */
 }
 h2 {
   margin: 3px 0 3px 0;

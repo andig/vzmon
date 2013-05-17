@@ -52,6 +52,14 @@
 
 	<script type="text/javascript" src="js/options.js"></script>
 	<script type="text/javascript" src="js/functions.js"></script>
+
+	<style type="text/css">
+@media screen and (/*orientation:landscape*/ min-width: 480px) { 
+	.row {
+	    /*max-width: 768px !important;*/
+	}
+}
+	</style>
 </head>
 
 <body>
@@ -177,106 +185,143 @@ function updateDatabaseStatus() {
 	}).fail(failHandler);
 }
 
-function updateValues() {
-	for (var prop in channels) {
-		$.getJSON(vzAPI + "/data/" + uuid[prop] + ".json?padding=?&from=today&to=now",
-			$.proxy(function(json) {
-				// console.info(json);
-				if (typeof json.data == "undefined") {
-	 				console.error("[updateValues] No current data for channel " + this._prop);
-	 				return;
-	 			}
-				if (typeof json.data.tuples == "undefined") {
-	 				console.error("[updateValues] No current data.tuples for channel " + this._prop);
-	 				return;
-	 			}
-				if (typeof json.data.consumption == "undefined") {
-	 				console.error("[updateValues] No current data.consumption for channel " + this._prop);
-	 				return;
-	 			}
-
-				$("#" + this._prop + "Now").html(Mustache.render($("#templateNow").html(), 
-					formatNumber((channels[this._prop].sign || +1) * json.data.tuples[json.data.tuples.length-1][1], formatCurrent)));
-				$("#" + this._prop + "Today").html(Mustache.render($("#templateToday").html(), 
-					formatNumber(Math.abs(json.data.consumption), formatConsumption)));
-				$("#" + this._prop + "Total").html(Mustache.render($("#templateTotal").html(), 
-					formatNumber((channels[this._prop].totalValue || 0) + Math.abs(json.data.consumption/1000.0), formatTotals)));
-			}, {_prop: prop})
-		).fail(failHandler);
+function updateChannels() {
+	for (var channel in channels) {
+		updateChannel(channel);
 	}	
 }
 
-function updatePlot() {
-	$.when(
-		$.getJSON(vzAPI + "/data/" + uuid.bezug + ".json?padding=?&from=" + options.sunriseTime + "&to=now&tuples=100"),
-		$.getJSON(vzAPI + "/data/" + uuid.generation + ".json?padding=?&from=" + options.sunriseTime + "&to=now&tuples=100")
-	).done(function(json_bezug, json_generation) {
-		// console.info(json_bezug[0], json_generation[0]);
-		if (typeof json_bezug[0].data.tuples == "undefined") {
-			console.error("[updatePlot] No consumption data.tuples for channel " + uuid.bezug);
+function updateChannel(channel) {
+	$.getJSON(vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=today&to=now", function(json) {
+		// console.info(json);
+		if (typeof json.data == "undefined") {
+			console.error("[updateChannel] No current data for channel " + channel);
 			return;
-		}		
-		if (typeof json_generation[0].data.tuples == "undefined") {
-			console.error("[updatePlot] No consumption data.tuples for channel " + uuid.generation);
+		}
+		if (typeof json.data.tuples == "undefined") {
+			console.error("[updateChannel] No current data.tuples for channel " + channel);
+			return;
+		}
+		if (typeof json.data.consumption == "undefined") {
+			console.error("[updateChannel] No current data.consumption for channel " + channel);
 			return;
 		}
 
-		json_bezug[0].data.tuples.shift();
-		json_generation[0].data.tuples.shift();
+		$("#" + channel + "Now").html(Mustache.render($("#templateNow").html(), 
+			formatNumber(Math.abs(json.data.tuples[json.data.tuples.length-1][1]), formatCurrent)));
+		$("#" + channel + "Today").html(Mustache.render($("#templateToday").html(), 
+			formatNumber(Math.abs(json.data.consumption), formatConsumption)));
+		$("#" + channel + "Total").html(Mustache.render($("#templateTotal").html(), 
+			formatNumber((channels[channel].totalValue || 0) + Math.abs(json.data.consumption/1000.0), formatTotals)));
+	}).fail(failHandler);
+}
 
-		var series = [
-			{ data: json_bezug[0].data.tuples, color: channels.bezug.color || "#666" }, // e61703
-			{ data: json_generation[0].data.tuples, color: channels.generation.color || "#222" }, // 046b34
-		];
+function invertSeries(data) {
+	console.info("[invertSeries] data length " + data.length);
+	for (var i=0; i<data.length; i++) {
+		data[i][1] = -data[i][1];
+	}
+}
+
+function updatePlot() {
+	console.info("[updatePlot]");
+
+	var deferred = [];
+	var data = {};
+
+	// generate one request per channel
+	for (var channel in channels) {
+		// only if channel is to be plotted
+		if (typeof channels[channel].plotOptions !== "undefined") {
+			console.info("[updatePlot] getting " + channel);
+			deferred.push(
+				$.getJSON(vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=" + options.sunriseTime + "&to=now&tuples=" + options.plotTuples).success(
+					$.proxy(function(json) {
+						console.info("[updatePlot] got " + this._channel);
+
+						if (typeof json.data.tuples == "undefined") {
+							console.error("[updatePlot] No consumption data.tuples for channel " + this._channel);
+							return;
+						}		
+
+						// convert result
+						json.data.tuples.shift();
+						if ((channels[this._channel].sign || +1) < 0) {
+							invertSeries(json.data.tuples);
+						}
+
+						// store
+						data[this._channel] = json;
+					}, {_channel: channel})
+				).fail(failHandler)
+			);
+		}
+	}
+
+	// add all data to plot series
+	$.when.apply(null, deferred).done(function() {
+		console.info("[updatePlot] all json finished");
+
+		var series = [];
+
+		for (var channel in data) {
+			var s = { data: data[channel].data.tuples };
+			// fuse series plot options
+			for (var prop in channels[channel].plotOptions) { 
+				s[prop] = channels[channel].plotOptions[prop];
+			}
+			series.push(s);
+		}
 
 		$.plot($("#flot"), series, plotOptions);
-	}).fail(failHandler);
+	});
 }
 
 $(document).ready(function() {
 	icons = new Skycons();
 
-	// plot formatting
-	if (typeof channels.generation.sign !== "undefined" && channels.generation.sign < 0) {
-		plotOptions.yaxis.transform = plotTransform;
-		plotOptions.yaxis.inverseTransform = plotInverseTransform;
-	}
 	plotOptions.yaxis.tickFormatter = unitFormatter;
 	$.plot($("#flot"), [{data:[]}], plotOptions);
 
 	$.getJSON(vzAPI +"/channel.json?padding=?", function(json) {
  		// get UUIDs for defined channels
- 		for (var prop in channels) {
- 			// console.info("Channel " + prop);
- 			uuid[prop] = getUUID(json, channels[prop].name);
- 			console.info("[init] UUID " + uuid[prop] + " " + prop);
+ 		for (var channel in channels) {
+ 			// console.info("Channel " + channel);
+ 			uuid[channel] = getUUID(json, channels[channel].name);
+ 			console.info("[init] UUID " + uuid[channel] + " " + channel);
 
- 			// do a one-time update of the totals if defined
- 			if (channels[prop].totalAtDate !== "undefined") {
-	 			$.getJSON(vzAPI + "/data/" + uuid[prop] + ".json?padding=?&from=" + channels[prop].totalAtDate + "&to=today&tuples=1",
+ 			if (typeof channels[channel].totalAtDate == "undefined") {
+ 				// no total defined, update directly 
+	 			updateChannel(channel);
+	 		}
+			else {
+	 			// do a one-time update of the totals if defined...
+	 			$.getJSON(vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=" + channels[channel].totalAtDate + "&to=today&tuples=1",
 	 				$.proxy(function(json) {
 			 			// console.info(json);
-			 			if (typeof json.data.consumption == "undefined") {
-			 				console.error("[init] No consumption data for channel " + this._prop);
-			 				return;
-			 			}
+						if (typeof json.data.consumption == "undefined") {
+							console.error("[init] No consumption data for channel " + this._channel);
+							return;
+						}
 
-		 				channels[this._prop].totalValue = (channels[this._prop].totalValue || 0) + Math.abs(json.data.consumption) / 1000.0;
-		 				updateValues();
-		 			}, {_prop: prop})
+		 				channels[this._channel].totalValue = (channels[this._channel].totalValue || 0) + Math.abs(json.data.consumption) / 1000.0;
+
+		 				// ... then update
+		 				updateChannel(this._channel);
+		 			}, {_channel: channel})
 		 		).fail(failHandler);
 	 		}
  		}
 
-		var refreshFunction = function() {
+		var refreshFunction = function(initial) {
 			updateWeather();
-			updateValues();
 			updatePlot();
+			if (!initial) updateChannels();
 			return(false);
 		}
 
-		// run
-		refreshFunction();
+		// run initial update
+		refreshFunction(true);
 		setInterval(refreshFunction, (options.updateInterval || 1) * 60 * 1000); // 60s
 		$("#refresh").click(refreshFunction);
  	}).fail(failHandler);
