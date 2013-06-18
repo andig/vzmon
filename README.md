@@ -5,6 +5,8 @@ Solar generation mobile phone monitoring app for volkszaehler.org
 
 ![app demo](https://github.com/andig/vzmon/raw/master/img/demo.png)
 
+![colored chart demo](https://github.com/andig/vzmon/raw/master/img/colorchart.png)
+
 ## Preparation
 
 1. Install [Volkszähler](volkszaehler.org)
@@ -26,11 +28,11 @@ Solar generation mobile phone monitoring app for volkszaehler.org
 3. Add API key to ``js/options.js``
 4. Add latitide/longitude of your position to ``js/options.js``
 
-### Volkszaehler API
+### Volkszähler API
 
 1. Add your [volkszaehler.org](volkszaehler.org) installation URL to ``js/options.js``
 2. Add the names of your generation and usage channels (not the UUIDs!) to ``js/options.js``
-3. If you want to show total consumption, you can add the "totalValue" and "totalValueAtDate" options to indicate at which data your meter had a specific meter reading. This value will be used as offset for your data
+3. If you want to show total consumption, you can add the "totalValue" and "totalValueAtDate" options to indicate at which data your meter had a specific meter reading. This value will be used as offset for your data.
 
 ### Use as Smartphone app
 
