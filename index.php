@@ -54,11 +54,15 @@
 	<script type="text/javascript" src="js/functions.js"></script>
 
 	<style type="text/css">
-@media screen and (/*orientation:landscape*/ min-width: 480px) { 
-	.row {
-	    /*max-width: 768px !important;*/
-	}
-}
+		@media screen and (/*orientation:landscape*/ min-width: 480px) { 
+			.row {
+			    /*max-width: 768px !important;*/
+			}
+		}
+		/* hide numbers until data available */
+		.row.nowrap {
+			display: none;
+		}
 	</style>
 </head>
 
@@ -94,7 +98,7 @@
 	</div>
 
 	<!-- current values -->
-	<div class="row nowrap" style="margin-top: 5px;">
+	<div id="generation" class="row nowrap" style="margin-top: 5px;">
 		<div class="w-150">
 			<h2>Solar generation</h2>
 			<div id="generationNow" class="largeValue">- <span class="unit">kW</span></div>
@@ -113,7 +117,7 @@
 		<div id="flot" class="w-300"></div>
 	</div>
 
-	<div class="row nowrap">
+	<div id="bezug" class="row nowrap">
 		<div class="w-150">
 			<h2>Usage</h2>
 			<div id="bezugNow" class="largeValue">- <span class="unit">kW</span></div>
@@ -128,7 +132,7 @@
 		</div>
 	</div>
 
-	<div class="row nowrap">
+	<div id="lieferung" class="row nowrap">
 		<div class="w-150">
 			<h2>Supply</h2>
 			<div id="lieferungNow" class="largeValue">- <span class="unit">kW</span></div>
@@ -213,6 +217,8 @@ function updateChannel(channel) {
 			formatNumber(Math.abs(json.data.consumption), formatConsumption)));
 		$("#" + channel + "Total").html(Mustache.render($("#templateTotal").html(), 
 			formatNumber((channels[channel].totalValue || 0) + Math.abs(json.data.consumption/1000.0), formatTotals)));
+
+		$("#" + channel).show();
 	}).fail(failHandler);
 }
 
@@ -262,9 +268,19 @@ function updatePlot() {
 	$.when.apply(null, deferred).done(function() {
 		console.info("[updatePlot] all json finished");
 
+		// sort series as defined in options
+		var sorted = {};
+
+		for (var channel in channels) {
+			if (typeof data[channel] != "undefined") { 
+				sorted[channel] = data.channel;
+			}
+		}
+
 		var series = [];
 
-		for (var channel in data) {
+		// use sorted data for building plot series
+		for (var channel in sorted) {
 			var s = { data: data[channel].data.tuples };
 			// fuse series plot options
 			for (var prop in channels[channel].plotOptions) { 
