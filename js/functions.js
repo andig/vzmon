@@ -68,10 +68,6 @@ function getUUID(json, title) {
 	})[0]);
 }
 
-function unitFormatter(v, axis) {
-	return formatNumber(v/1000.0, {decimals: 1}) + 'kW';
-}
-
 function mapWeatherIcon(icon) {
 	switch (icon) {
 		case "clear-day": return(Skycons.CLEAR_DAY);
@@ -91,7 +87,3 @@ function mapWeatherIcon(icon) {
 function cloudCover(e) {
   return e.cloudCover < .2 ? 0 : e.cloudCover <.8 ? 1 : 2;
 }
-
-// plot axis formatting
-function plotTransform(v) { return -v; }
-function plotInverseTransform(v) { return -v; }

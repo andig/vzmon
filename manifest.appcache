@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# version 7
+# version 10
 
 ./index.php
 ./img/favicon.ico
@@ -7,9 +7,13 @@ CACHE MANIFEST
 ./img/startup@2x.png
 
 ./css/vzmon.css
+./css/rickshaw.min.css
 ./fonts/AvenirNextLTPro-Cn.otf
 
 # scripts
+
+./js/rickshaw/rickshaw.min.js
+./js/rickshaw/d3.v2.js
 
 ./js/flot/jquery.flot.js
 ./js/flot/jquery.flot.time.js
@@ -20,6 +24,7 @@ CACHE MANIFEST
 
 ./js/functions.js
 ./js/options.js
+./js/plot.js
 
 # external scripts
 

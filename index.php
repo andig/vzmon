@@ -1,11 +1,11 @@
-<?php 
-	$browser = (strpos($_SERVER['HTTP_USER_AGENT'],"iPhone")) ? 'iphone' : ''; 
+<?php
+	$browser = (strpos($_SERVER['HTTP_USER_AGENT'],"iPhone")) ? 'iphone' : '';
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" encoding="en" <?php if ($browser == 'iphone') { ?> manifest="manifest.appcache" <?php } ?>>
 <head>
 	<title>VZmon</title>
-	<meta content="text/html;charset=utf-8" http-equiv="Content-Type"> 
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
 	<meta content="utf-8" http-equiv="encoding">
 <?php if ($browser == 'iphone') { ?>
 	<!-- iPhone settings -->
@@ -16,14 +16,14 @@
 	<link rel="apple-touch-icon" sizes="72x72" href="img/home-72.png" />
 	<link rel="apple-touch-icon" sizes="114x114" href="img/home-114.png" />
 
-	<!-- Startup images --> 
+	<!-- Startup images -->
 	<!-- Source: https://gist.github.com/tfausak/2222823 -->
 
-	<!-- iPhone - iPod touch - 320x460 --> 
+	<!-- iPhone - iPod touch - 320x460 -->
 	<link rel="apple-touch-startup-image" href="img/startup.png" media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 1)">
-	<!-- iPhone - iPod (Retina) - 640x920 --> 
+	<!-- iPhone - iPod (Retina) - 640x920 -->
 	<link rel="apple-touch-startup-image" href="img/startup@2x.png" media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)">
-	<!-- iPhone 5 - iPod 5 (Retina) - 640x1096 --> 
+	<!-- iPhone 5 - iPod 5 (Retina) - 640x1096 -->
 	<link rel="apple-touch-startup-image" href="img/startup-568h@2x.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
 
 	<!-- iPhone -->
@@ -41,11 +41,7 @@
 	<link rel="stylesheet" href="css/vzmon.css" type="text/css" />
 
 	<!-- js -->
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script> 
-
-    <script type="text/javascript" src="js/flot/jquery.flot.js"></script> 
-    <script type="text/javascript" src="js/flot/jquery.flot.time.js"></script> 
-    <script type="text/javascript" src="js/curvedLines.js"></script> 
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
 
 	<script type="text/javascript" src="js/mustache.js"></script>
 	<script type="text/javascript" src="js/skycons.js"></script>
@@ -53,8 +49,20 @@
 	<script type="text/javascript" src="js/options.js"></script>
 	<script type="text/javascript" src="js/functions.js"></script>
 
+	<!-- plotting -->
+	<script type="text/javascript" src="js/plot.js"></script>
+<!--
+    <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
+    <script type="text/javascript" src="js/flot/jquery.flot.time.js"></script>
+    <script type="text/javascript" src="js/flot/curvedLines.js"></script>
+-->
+	<script type="text/javascript" src="js/rickshaw/rickshaw.js"></script>
+	<script type="text/javascript" src="js/rickshaw/d3.v2.js"></script>
+	
+	<link rel="stylesheet" href="css/rickshaw.min.css" type="text/css" />
+
 	<style type="text/css">
-		@media screen and (/*orientation:landscape*/ min-width: 480px) { 
+		@media screen and (/*orientation:landscape*/ min-width: 480px) {
 			.row {
 			    /*max-width: 768px !important;*/
 			}
@@ -93,7 +101,7 @@
 			<div id="weather" class="text">
 				<div class="largeValue">-°</div>
 				<div class="unit">Current condition</div>
-			</div>	   
+			</div>
 		 </div>
 	</div>
 
@@ -102,11 +110,11 @@
 		<div class="w-150">
 			<h2>Solar generation</h2>
 			<div id="generationNow" class="largeValue">- <span class="unit">kW</span></div>
-		</div><!-- 
+		</div><!--
 	 --><div class="w-150">
 			<div id="generationToday">
 		 		<h1 class="right">- <span class="unit">kWh today</span></h1>
-			</div><!-- 
+			</div><!--
 		 --><div id="generationTotal">
 		 		<h1 class="right">- <span class="unit">kWh total</span></h1>
 		 	</div>
@@ -114,18 +122,18 @@
 	</div>
 
 	<div class="chart center">
-		<div id="flot" class="w-300"></div>
+		<div id="chart" class="w-300"></div>
 	</div>
 
 	<div id="bezug" class="row nowrap">
 		<div class="w-150">
 			<h2>Usage</h2>
 			<div id="bezugNow" class="largeValue">- <span class="unit">kW</span></div>
-		</div><!-- 
+		</div><!--
 	 --><div class="w-150">
 			<div id="bezugToday">
 		 		<h1 class="right">- <span class="unit">kWh today</span></h1>
-			</div><!-- 
+			</div><!--
 		 --><div id="bezugTotal" class="right">
 		 		<h1 class="right">- <span class="unit">kWh total</span></h1>
 		 	</div>
@@ -136,11 +144,11 @@
 		<div class="w-150">
 			<h2>Supply</h2>
 			<div id="lieferungNow" class="largeValue">- <span class="unit">kW</span></div>
-		</div><!-- 
+		</div><!--
 	 --><div class="w-150">
 			<div id="lieferungToday">
 		 		<h1 class="right">- <span class="unit">kWh today</span></h1>
-			</div><!-- 
+			</div><!--
 		 --><div id="lieferungTotal" class="right">
 		 		<h1 class="right">- <span class="unit">kWh total</span></h1>
 		 	</div>
@@ -149,11 +157,9 @@
 
 <script type="text/javascript">
 
-// UUIDs
-var uuid = {};
-
-// forecast.io weather icons
-var icons;
+var uuid = {};		// UUIDs
+var icons;			// forecast.io weather icons
+var plot;			// chart abstraction
 
 function updateWeather() {
 	$.getJSON(weatherAPI + "&callback=?", function(forecast) {
@@ -161,7 +167,7 @@ function updateWeather() {
 		forecast.currently.temperature = Math.round(forecast.currently.temperature);
 
 		if (typeof forecast.daily.data[0] !== "undefined") {
-			// xaxis minimum		
+			// xaxis minimum
 			console.info("[updateWeather] Sunrise: " + forecast.daily.data[0].sunriseTime);
 			plotOptions.xaxis.min = Math.floor(forecast.daily.data[0].sunriseTime / 3600) * 3600 * 1000;
 			options.sunriseTime = new Date(forecast.daily.data[0].sunriseTime * 1000).getUTCHours() + ":00";
@@ -192,16 +198,26 @@ function updateDatabaseStatus() {
 function updateChannels() {
 	for (var channel in channels) {
 		updateChannel(channel);
-	}	
+	}
 }
 
 function updateChannel(channel) {
-	$.getJSON(vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=today&to=now", function(json) {
-		// console.info(json);
-		if (typeof json.data == "undefined") {
-			console.error("[updateChannel] No current data for channel " + channel);
-			return;
+	// is the channel used at all?
+	var templates = ["Now", "Today", "Total"],
+		numTemplates = 0;
+
+	for (var i in templates) {
+		var template = templates[i];
+		if ($("#" + channel + template).length > 0) {
+			numTemplates++;
+			break;
 		}
+	}
+	// not used - exit
+	if (!numTemplates) return;
+
+	// get data
+	$.getJSON(vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=today&to=now", function(json) {
 		if (typeof json.data.tuples == "undefined") {
 			console.error("[updateChannel] No current data.tuples for channel " + channel);
 			return;
@@ -211,11 +227,11 @@ function updateChannel(channel) {
 			return;
 		}
 
-		$("#" + channel + "Now").html(Mustache.render($("#templateNow").html(), 
+		$("#" + channel + "Now").html(Mustache.render($("#templateNow").html(),
 			formatNumber(Math.abs(json.data.tuples[json.data.tuples.length-1][1]), formatCurrent)));
-		$("#" + channel + "Today").html(Mustache.render($("#templateToday").html(), 
+		$("#" + channel + "Today").html(Mustache.render($("#templateToday").html(),
 			formatNumber(Math.abs(json.data.consumption), formatConsumption)));
-		$("#" + channel + "Total").html(Mustache.render($("#templateTotal").html(), 
+		$("#" + channel + "Total").html(Mustache.render($("#templateTotal").html(),
 			formatNumber((channels[channel].totalValue || 0) + Math.abs(json.data.consumption/1000.0), formatTotals)));
 
 		$("#" + channel).show();
@@ -248,7 +264,7 @@ function updatePlot() {
 						if (typeof json.data.tuples == "undefined") {
 							console.error("[updatePlot] No consumption data.tuples for channel " + this._channel);
 							return;
-						}		
+						}
 
 						// convert result
 						json.data.tuples.shift();
@@ -269,35 +285,25 @@ function updatePlot() {
 		console.info("[updatePlot] all json finished");
 
 		// sort series as defined in options
-		var sorted = {};
+		var sorted = [];
 
 		for (var channel in channels) {
-			if (typeof data[channel] != "undefined") { 
+			if (typeof data[channel] !== "undefined") {
 				sorted[channel] = data.channel;
 			}
 		}
+		console.debug("data - sorted");
+		console.debug(data);
+		console.debug(sorted);
 
-		var series = [];
-
-		// use sorted data for building plot series
-		for (var channel in sorted) {
-			var s = { data: data[channel].data.tuples };
-			// fuse series plot options
-			for (var prop in channels[channel].plotOptions) { 
-				s[prop] = channels[channel].plotOptions[prop];
-			}
-			series.push(s);
-		}
-
-		$.plot($("#flot"), series, plotOptions);
+		plot.render(data, sorted);
 	});
 }
 
 $(document).ready(function() {
+	// setup
 	icons = new Skycons();
-
-	plotOptions.yaxis.tickFormatter = unitFormatter;
-	$.plot($("#flot"), [{data:[]}], plotOptions);
+	plot = new RickshawD3($("#chart")); // use either RickshawD3 or Flot 
 
 	$.getJSON(vzAPI +"/channel.json?padding=?", function(json) {
  		// get UUIDs for defined channels
@@ -307,7 +313,7 @@ $(document).ready(function() {
  			console.info("[init] UUID " + uuid[channel] + " " + channel);
 
  			if (typeof channels[channel].totalAtDate == "undefined") {
- 				// no total defined, update directly 
+ 				// no total defined, update directly
 	 			updateChannel(channel);
 	 		}
 			else {
