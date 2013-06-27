@@ -5,8 +5,6 @@ Solar generation mobile phone monitoring app for volkszaehler.org
 
 ![app demo](https://github.com/andig/vzmon/raw/master/img/demo.png)
 
-![colored chart demo](https://github.com/andig/vzmon/raw/master/img/colorchart.png)
-
 ## Preparation
 
 1. Install [Volkszähler](volkszaehler.org)
