@@ -51,13 +51,14 @@
 
 	<!-- plotting -->
 	<script type="text/javascript" src="js/plot.js"></script>
-<!--
+
     <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
     <script type="text/javascript" src="js/flot/jquery.flot.time.js"></script>
     <script type="text/javascript" src="js/flot/curvedLines.js"></script>
--->
+
 	<script type="text/javascript" src="js/rickshaw/rickshaw.js"></script>
 	<script type="text/javascript" src="js/rickshaw/d3.v2.js"></script>
+	<script type="text/javascript" src="js/rickshaw/bullet.js"></script>
 	
 	<link rel="stylesheet" href="css/rickshaw.min.css" type="text/css" />
 
@@ -71,6 +72,19 @@
 		.row.nowrap {
 			display: none;
 		}
+
+		/* bullet chart (power ratio) formatting */
+		.bullet { font: 10px; }
+		.bullet .marker { stroke: #000; stroke-width: 2px; }
+		.bullet .tick { font-size: 10px; }
+		.bullet .tick line { stroke: #666; stroke-width: .5px; }
+		.bullet .range.s0 { fill: #eee; }
+		.bullet .range.s1 { fill: #ddd; }
+		.bullet .range.s2 { fill: #ccc; }
+		.bullet .measure.s0 { fill: lightsteelblue; }
+		.bullet .measure.s1 { fill: steelblue; }
+		.bullet .title { font-size: 14px; font-weight: bold; }
+		.bullet .subtitle { fill: rgb(68, 68, 68); font-size: 10px; }
 	</style>
 </head>
 
@@ -125,6 +139,10 @@
 		<div id="chart" class="w-300"></div>
 	</div>
 
+	<div class="chart center">
+		<div id="perf" class="w-300"></div>
+	</div>
+
 	<div id="bezug" class="row nowrap">
 		<div class="w-150">
 			<h2>Usage</h2>
@@ -161,8 +179,13 @@ var uuid = {};		// UUIDs
 var icons;			// forecast.io weather icons
 var plot;			// chart abstraction
 
+var generationToday = 0,
+	generationYesterday = 0,
+	generationMax = 0;
+
 function updateWeather() {
-	$.getJSON(weatherAPI + "&callback=?", function(forecast) {
+	var url = weatherAPI + "&callback=?";
+	$.getJSON(url, function(forecast) {
 		// console.log(forecast);
 		forecast.currently.temperature = Math.round(forecast.currently.temperature);
 
@@ -180,28 +203,33 @@ function updateWeather() {
 		$("#weather").html(Mustache.render($("#templateWeather").html(), forecast));
 
 		icons.set($("#weather-icon").get(0), mapWeatherIcon(forecast.currently.icon));
-		icons.play();
-	}).fail(failHandler);
+		if (typeof options.animate !== "undefined" && options.animate) {			
+			icons.play();
+		}
+	}).fail(failHandler(url));
 }
 
 function updateDatabaseStatus() {
-	var formatTotals = {array:true, decimals:0, si:false, unit:'kWh'};
-	$.getJSON(vzAPI + "/capabilities.json?padding=?&section=database", function(json) {
+	var url = vzAPI + "/capabilities.json?padding=?&section=database";
+	$.getJSON(url, function(json) {
 		console.log(json.capabilities.database);
 		$("#database").html(Mustache.render($("#templateDatebase").html(), {
 			dbrows: formatNumber(json.capabilities.database.rows / 1000, {decimals:0, si:false}),
 			dbsize: formatNumber(json.capabilities.database.size / 1024 / 1024, {decimals:1, si:false})
 		}));
-	}).fail(failHandler);
+	}).fail(failHandler(url, "updateDatabaseStatus"));
 }
 
 function updateChannels() {
+	console.info("[updateChannels]");
 	for (var channel in channels) {
 		updateChannel(channel);
 	}
 }
 
 function updateChannel(channel) {
+	console.info("[updateChannel] " + channel);
+
 	// is the channel used at all?
 	var templates = ["Now", "Today", "Total"],
 		numTemplates = 0;
@@ -217,7 +245,8 @@ function updateChannel(channel) {
 	if (!numTemplates) return;
 
 	// get data
-	$.getJSON(vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=today&to=now", function(json) {
+	var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=today&to=now";
+	$.getJSON(url, function(json) {
 		if (typeof json.data.tuples == "undefined") {
 			console.error("[updateChannel] No current data.tuples for channel " + channel);
 			return;
@@ -227,22 +256,24 @@ function updateChannel(channel) {
 			return;
 		}
 
+		// remember
+		if (channel == "generation") {
+			generationToday = Math.abs(json.data.consumption);
+
+			if (typeof options.power !== "undefined") {
+				updatePerf("generation");
+			}
+		}
+
 		$("#" + channel + "Now").html(Mustache.render($("#templateNow").html(),
 			formatNumber(Math.abs(json.data.tuples[json.data.tuples.length-1][1]), formatCurrent)));
 		$("#" + channel + "Today").html(Mustache.render($("#templateToday").html(),
 			formatNumber(Math.abs(json.data.consumption), formatConsumption)));
 		$("#" + channel + "Total").html(Mustache.render($("#templateTotal").html(),
-			formatNumber((channels[channel].totalValue || 0) + Math.abs(json.data.consumption/1000.0), formatTotals)));
+			formatNumber(Math.abs(channels[channel].totalValue || 0) + Math.abs(json.data.consumption), formatTotals)));
 
 		$("#" + channel).show();
-	}).fail(failHandler);
-}
-
-function invertSeries(data) {
-	console.info("[invertSeries] data length " + data.length);
-	for (var i=0; i<data.length; i++) {
-		data[i][1] = -data[i][1];
-	}
+	}).fail(failHandler(url, "updateChannel"));
 }
 
 function updatePlot() {
@@ -256,8 +287,9 @@ function updatePlot() {
 		// only if channel is to be plotted
 		if (typeof channels[channel].plotOptions !== "undefined") {
 			console.info("[updatePlot] getting " + channel);
+			var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=" + options.sunriseTime + "&to=now&tuples=" + options.plotTuples;
 			deferred.push(
-				$.getJSON(vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=" + options.sunriseTime + "&to=now&tuples=" + options.plotTuples).success(
+				$.getJSON(url).success(
 					$.proxy(function(json) {
 						console.info("[updatePlot] got " + this._channel);
 
@@ -269,20 +301,22 @@ function updatePlot() {
 						// convert result
 						json.data.tuples.shift();
 						if ((channels[this._channel].sign || +1) < 0) {
-							invertSeries(json.data.tuples);
+							for (var i=0; i<json.data.tuples.length; i++) {
+								json.data.tuples[i][1] *= (channels[this._channel].sign || +1);
+							}
 						}
 
 						// store
 						data[this._channel] = json;
 					}, {_channel: channel})
-				).fail(failHandler)
+				).fail(failHandler(url, "updatePlot"))
 			);
 		}
 	}
 
 	// add all data to plot series
 	$.when.apply(null, deferred).done(function() {
-		console.info("[updatePlot] all json finished");
+		console.info("[updatePlot] getting channels finished");
 
 		// sort series as defined in options
 		var sorted = [];
@@ -292,20 +326,98 @@ function updatePlot() {
 				sorted[channel] = data.channel;
 			}
 		}
-		console.debug("data - sorted");
-		console.debug(data);
-		console.debug(sorted);
 
 		plot.render(data, sorted);
 	});
 }
 
+function updatePerfChart(yesterday, max) {
+	console.info("[updatePerfChart] " + formatNumber((generationToday / 1000.0)) + "," + formatNumber(yesterday) + "," + formatNumber(max));
+
+	var data = [{
+		"title": "Ratio",
+		"subtitle": "kWh/kWp",
+		"ranges": [5,6,7.5],
+		"measures": [(generationToday / 1000.0) / options.power, yesterday / options.power],
+		"markers": [max / options.power]
+	}];
+
+	var margin = {top: 5, right: 0, bottom: 15, left: 40},
+	    width = 300 - margin.left - margin.right,
+	    height = 40 - margin.top - margin.bottom;
+
+	var chart = d3.bullet()
+	    .width(width)
+	    .height(height);
+
+	var svg = d3.select("#perf").selectAll("svg")
+		.data(data)
+		.enter().append("svg")
+		.attr("class", "bullet")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+		.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+		.call(chart);
+
+	var title = svg.append("g")
+		.style("text-anchor", "end")
+		.attr("transform", "translate(-6," + height / 2 + ")");
+
+	title.append("text")
+		.attr("class", "title")
+		.text(function(d) { return d.title; });
+
+	title.append("text")
+		.attr("class", "subtitle")
+		.attr("dy", "1em")
+		.text(function(d) { return d.subtitle; });
+
+}
+
+function updatePerf(channel) {
+	console.info("[updatePerf] " + channel);
+
+	// hisorical values already collected?
+	if (generationYesterday + generationMax > 0) {
+		updatePerfChart(generationYesterday, generationMax);
+	}
+	else {
+		// get data
+		var date = new Date();
+		var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=1.1." + date.getFullYear() + "&to=now&group=day";
+		$.getJSON(url, function(json) {
+			if (typeof json.data.tuples == "undefined") {
+				console.error("[updateChannel] No current data.tuples for channel " + channel);
+				return;
+			}
+			if (typeof json.data.consumption == "undefined") {
+				console.error("[updateChannel] No current data.consumption for channel " + channel);
+				return;
+			}
+			console.info("[updatePerf] got daily data (" + json.data.tuples.length + " data points)");
+
+			// find best day this year
+			generationMax = json.data.tuples.reduce(function(previousValue, currentValue, index, array) {
+				var perf = Math.abs(currentValue[1]) * 24 / 1000.0;
+				return Math.max(previousValue, perf); 
+			}, 0);
+
+			generationYesterday = (json.data.tuples.length > 1) ? Math.abs(json.data.tuples[json.data.tuples.length-2][1]) * 24 / 1000.0 : 0;
+
+			updatePerfChart(generationYesterday, generationMax);
+		}).fail(failHandler(url, "updatePerf"));
+	}
+}
+
 $(document).ready(function() {
 	// setup
 	icons = new Skycons();
-	plot = new RickshawD3($("#chart")); // use either RickshawD3 or Flot 
+	// instantiate plot library by name - either RickshawD3 or Flot 
+	plot = new Flot($("#chart"));
 
-	$.getJSON(vzAPI +"/channel.json?padding=?", function(json) {
+	var url = vzAPI +"/channel.json?padding=?";
+	$.getJSON(url, function(json) {
  		// get UUIDs for defined channels
  		for (var channel in channels) {
  			// console.info("Channel " + channel);
@@ -318,7 +430,8 @@ $(document).ready(function() {
 	 		}
 			else {
 	 			// do a one-time update of the totals if defined...
-	 			$.getJSON(vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=" + channels[channel].totalAtDate + "&to=today&tuples=1",
+	 			var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=" + channels[channel].totalAtDate + "&to=today&tuples=1";
+	 			$.getJSON(url,
 	 				$.proxy(function(json) {
 			 			// console.info(json);
 						if (typeof json.data.consumption == "undefined") {
@@ -326,12 +439,12 @@ $(document).ready(function() {
 							return;
 						}
 
-		 				channels[this._channel].totalValue = (channels[this._channel].totalValue || 0) + Math.abs(json.data.consumption) / 1000.0;
+		 				channels[this._channel].totalValue = Math.abs(channels[this._channel].totalValue || 0) * 1000.0 + Math.abs(json.data.consumption);
 
 		 				// ... then update
 		 				updateChannel(this._channel);
 		 			}, {_channel: channel})
-		 		).fail(failHandler);
+		 		).fail(failHandler(url, "init"));
 	 		}
  		}
 
@@ -346,7 +459,7 @@ $(document).ready(function() {
 		refreshFunction(true);
 		setInterval(refreshFunction, (options.updateInterval || 1) * 60 * 1000); // 60s
 		$("#refresh").click(refreshFunction);
- 	}).fail(failHandler);
+ 	}).fail(failHandler(url, "init"));
  });
 
 </script>

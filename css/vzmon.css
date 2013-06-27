@@ -8,7 +8,7 @@
   -webkit-box-sizing: border-box;
   box-sizing: border-box; }
 body {
-  font-family: AvenirNextCondensed, "Arial Narrow", Arial, Helvetica;
+  font-family: AvenirNextCondensed, "Arial Narrow", sans-serif, Arial, Helvetica;
   font-weight: normal;
   font-style: normal;
 }

@@ -88,7 +88,7 @@ RickshawD3.prototype.render = function(data, sorted) {
 			stroke: (stroke) ? stroke : 'steelblue'
 		});
 	}
-
+	
 	// build graph
 	$(this.element).html("");
 	var graph = new Rickshaw.Graph( {
@@ -100,13 +100,14 @@ RickshawD3.prototype.render = function(data, sorted) {
 		//preserve: true,
 		series: series
 	});
-	// graph.forceY([0]);
 	graph.renderer.unstack = true;
+
 	graph.render();
 
 	var xAxis = new Rickshaw.Graph.Axis.Time({
 		graph: graph,
-		orientation: 'bottom'
+		orientation: 'bottom',
+		timeFixtures: new Rickshaw.Fixtures.LocalTime()
 	});
 	xAxis.render();
 

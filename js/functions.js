@@ -4,12 +4,12 @@ function formatNumber(number, options) {
 	number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
 	var // n = !isFinite(+number) ? 0 : +number,
 		  decimals = (typeof options !== 'undefined' && typeof options.decimals !== 'undefined') ? options.decimals : 1,
-    	sep = (typeof options !== 'undefined' && typeof options.thousands_sep !== 'undefined') ? options.thousands_sep : '',
-    	dec = (typeof options !== 'undefined' && typeof options.dec_point !== 'undefined') ? options.dec_point : '.',
-    	unit = (typeof options !== 'undefined' && typeof options.unit !== 'undefined') ? options.unit : '',
-    	prefix = (typeof options !== 'undefined' && typeof options.si !== 'undefined') ? options.si : false,
-    	autoprecision = (typeof options !== 'undefined' && typeof options.pretty !== 'undefined') ? options.pretty : false,
-    	array = (typeof options !== 'undefined' && typeof options.array !== 'undefined') ? options.array : false,
+    	sep      = (typeof options !== 'undefined' && typeof options.thousands_sep !== 'undefined') ? options.thousands_sep : '',
+    	dec      = (typeof options !== 'undefined' && typeof options.dec_point !== 'undefined') ? options.dec_point : '.',
+    	unit     = (typeof options !== 'undefined' && typeof options.unit !== 'undefined') ? options.unit : '',
+    	prefix   = (typeof options !== 'undefined' && typeof options.si !== 'undefined') ? options.si : false,
+    	pretty   = (typeof options !== 'undefined' && typeof options.pretty !== 'undefined') ? options.pretty : false,
+    	array    = (typeof options !== 'undefined' && typeof options.array !== 'undefined') ? options.array : false,
     	s = '',
     	siPrefixes = ['k', 'M', 'G', 'T'],
     	siIndex = 0,
@@ -27,7 +27,7 @@ function formatNumber(number, options) {
 	}
   
 	var prec = decimals;
-	if (autoprecision) {
+	if (pretty) {
     if (Math.abs(number) >= 100) { var prec = Math.max(prec-2,0) }
       else if (Math.abs(number) >= 10) { var prec = Math.max(prec-1,0) };
   }
@@ -56,9 +56,21 @@ function formatNumber(number, options) {
   return s+unit;
 }
 
-var failHandler = function(jqXHR, textStatus, errorThrown) {
-	// log the error to the console 
-	console.error("The following error occured: " + textStatus, errorThrown, jqXHR.responseText);
+function functionName() {
+  console.debug(arguments.callee.caller.name);
+}
+
+// json failure handler
+function failHandler(url, context) { 
+  return function(jqXHR, textStatus, errorThrown) { 
+    // log the error to the console 
+    var msg = "Failed retrieving " + url;
+    if (typeof context !== "undefined") {
+      msg = context + " " + msg;
+    }
+    console.error(msg);
+    console.error("HTTP status " + jqXHR.status + ": " + textStatus, errorThrown, jqXHR.responseText);
+  }; 
 }
 
 function getUUID(json, title) {
