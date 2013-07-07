@@ -25,13 +25,6 @@
 	<link rel="apple-touch-startup-image" href="img/startup@2x.png" media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)">
 	<!-- iPhone 5 - iPod 5 (Retina) - 640x1096 -->
 	<link rel="apple-touch-startup-image" href="img/startup-568h@2x.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
-
-	<!-- iPhone -->
-	<!-- <link rel="apple-touch-startup-image" href="img/startup-320x480.png" media="screen and (max-device-width: 320px)"> -->
-	<!-- iPhone (Retina) -->
-	<!-- <link rel="apple-touch-startup-image" href="img/startup-640x960.png" media="screen and (device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)"> -->
-	<!-- iPhone 5 -->
-	<!-- <link rel="apple-touch-startup-image" href="img/startup-640x1136.png" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)"> -->
 <?php } else { ?>
 	<meta name="viewport" content="width=device-width" />
 <?php } ?>
@@ -68,28 +61,13 @@
 			    /*max-width: 768px !important;*/
 			}
 		}
-		/* hide numbers until data available */
-		.row.nowrap {
-			display: none;
-		}
-
-		/* bullet chart (power ratio) formatting */
-		.bullet { font: 10px; }
-		.bullet .marker { stroke: #000; stroke-width: 2px; }
-		.bullet .tick { font-size: 10px; }
-		.bullet .tick line { stroke: #666; stroke-width: .5px; }
-		.bullet .range.s0 { fill: #eee; }
-		.bullet .range.s1 { fill: #ddd; }
-		.bullet .range.s2 { fill: #ccc; }
-		.bullet .measure.s0 { fill: lightsteelblue; }
-		.bullet .measure.s1 { fill: steelblue; }
-		.bullet .title { font-size: 14px; font-weight: bold; }
-		.bullet .subtitle { fill: rgb(68, 68, 68); font-size: 10px; }
 	</style>
 </head>
 
 <body>
-	<!-- templates -->
+	<!-- 
+		HTML templates (hidden)
+	-->
 	<div class="hidden">
 		<div id="templateWeather">
 			<div>
@@ -107,6 +85,12 @@
 	 		<h1 class="right">{{value}}<span class="unit">{{unit}} total</span></h1>
 		</div>
 	</div>
+
+	<!--
+		HTML document structure
+
+		if a channel is defined in channels, this section will be parsed to see if a suitable representation can be found
+	-->
 
 	<!-- weather -->
 	<div class="row">
@@ -331,15 +315,15 @@ function updatePlot() {
 	});
 }
 
-function updatePerfChart(yesterday, max) {
-	console.info("[updatePerfChart] " + formatNumber((generationToday / 1000.0)) + "," + formatNumber(yesterday) + "," + formatNumber(max));
+function updatePerfChart(today, yesterday, max) {
+	console.info("[updatePerfChart] " + formatNumber(today) + "," + formatNumber(yesterday) + "," + formatNumber(max));
 
 	var data = [{
 		"title": "Ratio",
 		"subtitle": "kWh/kWp",
 		"ranges": [5,6,7.5],
-		"measures": [(generationToday / 1000.0) / options.power, yesterday / options.power],
-		"markers": [max / options.power]
+		"measures": [yesterday/options.power, today/options.power],
+		"markers": [max/options.power]
 	}];
 
 	var margin = {top: 5, right: 0, bottom: 15, left: 40},
@@ -350,15 +334,23 @@ function updatePerfChart(yesterday, max) {
 	    .width(width)
 	    .height(height);
 
-	var svg = d3.select("#perf").selectAll("svg")
-		.data(data)
-		.enter().append("svg")
-		.attr("class", "bullet")
-		.attr("width", width + margin.left + margin.right)
-		.attr("height", height + margin.top + margin.bottom)
+	var svg = d3.select("#perf").selectAll("svg");
+
+	// bullet chart already created?
+	if (svg[0].length > 0) {
+		svg.data(data).call(chart.duration(500));
+		return;
+	}
+
+	// create
+	svg = svg.data(data).enter()
+		.append("svg")
+			.attr("class", "bullet")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
 		.append("g")
-		.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-		.call(chart);
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+			.call(chart);
 
 	var title = svg.append("g")
 		.style("text-anchor", "end")
@@ -372,7 +364,6 @@ function updatePerfChart(yesterday, max) {
 		.attr("class", "subtitle")
 		.attr("dy", "1em")
 		.text(function(d) { return d.subtitle; });
-
 }
 
 function updatePerf(channel) {
@@ -380,7 +371,7 @@ function updatePerf(channel) {
 
 	// hisorical values already collected?
 	if (generationYesterday + generationMax > 0) {
-		updatePerfChart(generationYesterday, generationMax);
+		updatePerfChart(generationToday / 1000.0, generationYesterday, generationMax);
 	}
 	else {
 		// get data
@@ -388,11 +379,11 @@ function updatePerf(channel) {
 		var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=1.1." + date.getFullYear() + "&to=now&group=day";
 		$.getJSON(url, function(json) {
 			if (typeof json.data.tuples == "undefined") {
-				console.error("[updateChannel] No current data.tuples for channel " + channel);
+				console.error("[updatePerf] No current data.tuples for channel " + channel);
 				return;
 			}
 			if (typeof json.data.consumption == "undefined") {
-				console.error("[updateChannel] No current data.consumption for channel " + channel);
+				console.error("[updatePerf] No current data.consumption for channel " + channel);
 				return;
 			}
 			console.info("[updatePerf] got daily data (" + json.data.tuples.length + " data points)");
@@ -405,7 +396,7 @@ function updatePerf(channel) {
 
 			generationYesterday = (json.data.tuples.length > 1) ? Math.abs(json.data.tuples[json.data.tuples.length-2][1]) * 24 / 1000.0 : 0;
 
-			updatePerfChart(generationYesterday, generationMax);
+			updatePerfChart(generationToday / 1000.0, generationYesterday, generationMax);
 		}).fail(failHandler(url, "updatePerf"));
 	}
 }
@@ -414,7 +405,14 @@ $(document).ready(function() {
 	// setup
 	icons = new Skycons();
 	// instantiate plot library by name - either RickshawD3 or Flot 
-	plot = new Flot($("#chart"));
+	plot = new RickshawD3($("#chart"));
+
+// setInterval(function() { 
+// 	updatePerfChart(Math.floor(Math.random() * 6*7) + 1, 4*7, 7*7);
+// }, 2000);
+// updatePerfChart(3*7, 4*7, 7*7);
+// updatePerfChart(5*7, 4*7, 7*7);
+// return;
 
 	var url = vzAPI +"/channel.json?padding=?";
 	$.getJSON(url, function(json) {
@@ -460,7 +458,7 @@ $(document).ready(function() {
 		setInterval(refreshFunction, (options.updateInterval || 1) * 60 * 1000); // 60s
 		$("#refresh").click(refreshFunction);
  	}).fail(failHandler(url, "init"));
- });
+});
 
 </script>
 

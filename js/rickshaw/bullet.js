@@ -17,14 +17,17 @@ d3.bullet = function() {
   // For each small multiple…
   function bullet(g) {
     g.each(function(d, i) {
+
       var rangez = ranges.call(this, d, i).slice().sort(d3.descending),
           markerz = markers.call(this, d, i).slice().sort(d3.descending),
-          measurez = measures.call(this, d, i).slice().sort(d3.descending),
+          // measurez = measures.call(this, d, i).slice().sort(d3.descending),
+          measurez = measures.call(this, d, i).slice(),
           g = d3.select(this);
 
       // Compute the new x-scale.
       var x1 = d3.scale.linear()
-          .domain([0, Math.max(rangez[0], markerz[0], measurez[0])])
+          .domain([0, Math.max(rangez[0], markerz[0], measurez[0], measurez[1])])
+          // .domain([0, Math.max(rangez[0], markerz[0], Math.max(measurez))])
           .range(reverse ? [width, 0] : [0, width]);
 
       // Retrieve the old x-scale, if this is an update.
@@ -86,7 +89,7 @@ d3.bullet = function() {
           .data(markerz);
 
       marker.enter().append("line")
-          .attr("class", "marker")
+          .attr("class", function(d, i) { return "marker s" + i; })
           .attr("x1", x0)
           .attr("x2", x0)
           .attr("y1", height / 6)
