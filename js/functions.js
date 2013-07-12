@@ -37,14 +37,6 @@ function formatNumber(number, options) {
 
 	if (prefix) {
     // console.debug("[prefix] " + number +" "+ prefix)
-/*
-    // allow pre-adjusting the prefix to k,M,..
-    var _prefix = prefix;
-    while (Math.abs(_prefix) >= 1000 && siIndex < siPrefixes.length-1) {
-      _prefix /= 1000.0;
-      siIndex++;
-    }
-*/
     while (Math.abs(number) >= prefix && siIndex < siPrefixes.length-1) {
       number /= 1000.0;
       siIndex++;

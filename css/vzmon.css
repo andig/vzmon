@@ -12,6 +12,7 @@ body {
   font-weight: normal;
   font-style: normal;
 }
+
 /* helper classes */
 .hidden {
   display: none; }
@@ -53,7 +54,6 @@ h1, h2 {
   margin: 0 10px 20px 0;
 }
 #chart {
-  margin: 0px auto;
   margin-bottom: 10px;
   max-width: 300px;
   height: 200px;

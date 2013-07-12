@@ -34,7 +34,7 @@
 	<link rel="stylesheet" href="css/vzmon.css" type="text/css" />
 
 	<!-- js -->
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
 
 	<script type="text/javascript" src="js/mustache.js"></script>
 	<script type="text/javascript" src="js/skycons.js"></script>
@@ -43,8 +43,6 @@
 	<script type="text/javascript" src="js/functions.js"></script>
 
 	<!-- plotting -->
-	<script type="text/javascript" src="js/plot.js"></script>
-
     <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
     <script type="text/javascript" src="js/flot/jquery.flot.time.js"></script>
     <script type="text/javascript" src="js/flot/curvedLines.js"></script>
@@ -53,6 +51,8 @@
 	<script type="text/javascript" src="js/rickshaw/d3.v2.js"></script>
 	<script type="text/javascript" src="js/rickshaw/bullet.js"></script>
 	
+	<script type="text/javascript" src="js/plot.js"></script>
+
 	<link rel="stylesheet" href="css/rickshaw.min.css" type="text/css" />
 
 	<style type="text/css">
@@ -61,6 +61,7 @@
 			    /*max-width: 768px !important;*/
 			}
 		}
+		/*.rickshaw_graph .x_tick .title { bottom: -18px; }	*/
 	</style>
 </head>
 
@@ -96,7 +97,7 @@
 	<div class="row">
 		<div class="w-300">
 		    <canvas id="weather-icon" width="90" height="90"></canvas>
-			<div id="weather" class="text">
+			<div id="weather-text" class="text">
 				<div class="largeValue">-°</div>
 				<div class="unit">Current condition</div>
 			</div>
@@ -119,12 +120,12 @@
 		</div>
 	</div>
 
-	<div class="chart center">
-		<div id="chart" class="w-300"></div>
+	<div class="row">
+		<div id="chart"></div>
 	</div>
 
-	<div class="chart center">
-		<div id="perf" class="w-300"></div>
+	<div class="row">
+		<div id="perf"></div>
 	</div>
 
 	<div id="bezug" class="row nowrap">
@@ -184,7 +185,8 @@ function updateWeather() {
 			plotOptions.xaxis.max = Math.ceil(forecast.daily.data[0].sunsetTime / 3600) * 3600 * 1000;
 		}
 
-		$("#weather").html(Mustache.render($("#templateWeather").html(), forecast));
+		$("#weather-text").html(Mustache.render($("#templateWeather").html(), forecast));
+		$("#weather").show();
 
 		icons.set($("#weather-icon").get(0), mapWeatherIcon(forecast.currently.icon));
 		if (typeof options.animate !== "undefined" && options.animate) {			
@@ -389,6 +391,7 @@ function updatePerf(channel) {
 			console.info("[updatePerf] got daily data (" + json.data.tuples.length + " data points)");
 
 			// find best day this year
+			json.data.tuples.pop();
 			generationMax = json.data.tuples.reduce(function(previousValue, currentValue, index, array) {
 				var perf = Math.abs(currentValue[1]) * 24 / 1000.0;
 				return Math.max(previousValue, perf); 
@@ -405,7 +408,7 @@ $(document).ready(function() {
 	// setup
 	icons = new Skycons();
 	// instantiate plot library by name - either RickshawD3 or Flot 
-	plot = new Flot($("#chart"));
+	plot = new RickshawD3($("#chart"));
 
 	var url = vzAPI +"/channel.json?padding=?";
 	$.getJSON(url, function(json) {
@@ -428,6 +431,9 @@ $(document).ready(function() {
 						if (typeof json.data.consumption == "undefined") {
 							console.error("[init] No consumption data for channel " + this._channel);
 							return;
+						}
+						if (json.data.consumption == 0) {
+							console.warn("[init] Consumption 0 for channel " + this._channel + "(" + json.data.tuples + " tuples)");
 						}
 
 		 				channels[this._channel].totalValue = Math.abs(channels[this._channel].totalValue || 0) * 1000.0 + Math.abs(json.data.consumption);
