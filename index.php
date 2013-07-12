@@ -405,14 +405,7 @@ $(document).ready(function() {
 	// setup
 	icons = new Skycons();
 	// instantiate plot library by name - either RickshawD3 or Flot 
-	plot = new RickshawD3($("#chart"));
-
-// setInterval(function() { 
-// 	updatePerfChart(Math.floor(Math.random() * 6*7) + 1, 4*7, 7*7);
-// }, 2000);
-// updatePerfChart(3*7, 4*7, 7*7);
-// updatePerfChart(5*7, 4*7, 7*7);
-// return;
+	plot = new Flot($("#chart"));
 
 	var url = vzAPI +"/channel.json?padding=?";
 	$.getJSON(url, function(json) {
