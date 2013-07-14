@@ -80,7 +80,7 @@ RickshawD3.prototype = new Plot();
 RickshawD3.prototype.constructor = RickshawD3;
 
 RickshawD3.prototype.unitFormatter = function(v) {
-	return formatNumber(v/1000.0, {decimals: 1}) + 'kW';
+	return (v > 0) ? formatNumber(v/1000.0, {decimals: 1}) + 'kW' : '';
 }
 
 RickshawD3.prototype.render = function(data, sorted) {
