@@ -150,7 +150,7 @@ $.extend($.easing,
 
 function draw_dial(ctx,x,y,width,height,position,maxvalue,units,type,format,reverse)
 {
-  if (!ctx) return; 
+  if (!ctx) return;
   maxvalue = 1 * maxvalue || 3000;
   units = units || "";
   reverse = reverse || false;
@@ -173,11 +173,11 @@ function draw_dial(ctx,x,y,width,height,position,maxvalue,units,type,format,reve
     ["#f46722","#f8a01b","#87c03f","#87c03f","#f8a01b","#f46722"],
     ["#a7cbe2","#68b7eb","#0d97f3","#0f81d0","#0c6dae","#08578e"],
     // temperature dial blue-red, first segment blue should mean below freezing C
-    ["#b7beff","#ffd9d9","#ffbebe","#ff9c9c","#ff6e6e","#ff3d3d"],   
+    ["#b7beff","#ffd9d9","#ffbebe","#ff9c9c","#ff6e6e","#ff3d3d"],
     // temperature dial blue-red, first segment blue should mean below freezing C
-    ["#e94937","#da4130","#c43626","#ad2b1c","#992113","#86170a"],   
+    ["#e94937","#da4130","#c43626","#ad2b1c","#992113","#86170a"],
     // light: from dark grey to white
-    ["#202020","#4D4D4D","#7D7D7D","#EEF0F3","#F7F7F7", "#FFFFFF"]][type]; 
+    ["#202020","#4D4D4D","#7D7D7D","#EEF0F3","#F7F7F7", "#FFFFFF"]][type];
 
   if (reverse) segment = segment.reverse();
   var offset = 0;
@@ -206,8 +206,8 @@ function draw_dial(ctx,x,y,width,height,position,maxvalue,units,type,format,reve
   if (reverse) a = 2-a;
 
   var c = 3*0.785;
-  var width = 0.785; 
-  var pos = 0; 
+  var width = 0.785;
+  var pos = 0;
   var inner = size * 0.48;
 
   // Segments
@@ -216,7 +216,7 @@ function draw_dial(ctx,x,y,width,height,position,maxvalue,units,type,format,reve
     ctx.fillStyle = segment[z];
     ctx.beginPath();
     ctx.arc(x,y,size,c+pos,c+pos+width+0.01,false);
-    ctx.lineTo(x,y); 
+    ctx.lineTo(x,y);
     ctx.closePath();
     ctx.fill();
     pos += width;
@@ -227,7 +227,7 @@ function draw_dial(ctx,x,y,width,height,position,maxvalue,units,type,format,reve
   ctx.strokeStyle = "#fff";
   ctx.beginPath();
   ctx.arc(x,y,size,c,c+pos,false);
-  ctx.lineTo(x,y); 
+  ctx.lineTo(x,y);
   ctx.closePath();
   ctx.stroke();
 
@@ -239,9 +239,9 @@ function draw_dial(ctx,x,y,width,height,position,maxvalue,units,type,format,reve
 
   ctx.lineWidth = (size*0.052).toFixed(0);
   ctx.beginPath();
-  ctx.moveTo(x+Math.sin(Math.PI*a-0.2)*inner,y+Math.cos(Math.PI*a-0.2)*inner); 
-  ctx.lineTo(x+Math.sin(Math.PI*a)*size,y+Math.cos(Math.PI*a)*size); 
-  ctx.lineTo(x+Math.sin(Math.PI*a+0.2)*inner,y+Math.cos(Math.PI*a+0.2)*inner); 
+  ctx.moveTo(x+Math.sin(Math.PI*a-0.2)*inner,y+Math.cos(Math.PI*a-0.2)*inner);
+  ctx.lineTo(x+Math.sin(Math.PI*a)*size,y+Math.cos(Math.PI*a)*size);
+  ctx.lineTo(x+Math.sin(Math.PI*a+0.2)*inner,y+Math.cos(Math.PI*a+0.2)*inner);
   ctx.arc(x,y,inner,1-(Math.PI*a-0.2),1-(Math.PI*a+5.4),true);
   ctx.closePath();
   ctx.fill();
@@ -252,7 +252,7 @@ function draw_dial(ctx,x,y,width,height,position,maxvalue,units,type,format,reve
   ctx.textAlign = "center";
   ctx.font = "bold "+(size*0.28)+"px arial";
 
-  var value = Render.formatNumber(position, true);
+  var value = formatNumber(position, true);
   ctx.fillText(value+units,x,y+(size*0.105));
 }
 
@@ -279,15 +279,15 @@ function draw_cylinder(ctx,cyl_bot,cyl_top,width,height)
   ctx.arc(midx,top_pos,cyl_width/2,Math.PI,0,false);
   ctx.closePath();
   ctx.fill();
-  
+
   for (var i=0; i<6; i++) {
     var y = top_pos + i*bh;
     var step_temp = cyl_top + i*step_diff;
-    ctx.fillStyle = get_color(step_temp); 
+    ctx.fillStyle = get_color(step_temp);
     ctx.fillRect(cyl_left, y, cyl_width, bh);
   }
 
-  // bottom 
+  // bottom
   ctx.fillStyle = get_color(cyl_bot);
   ctx.beginPath();
   ctx.arc(midx,bot_pos,cyl_width/2,0,Math.PI,false);
@@ -332,28 +332,28 @@ function draw_temp(ctx,val,width,height)
   ctx.closePath();
   ctx.fill();
 
-  // neck  
-  ctx.fillStyle = color; 
+  // neck
+  ctx.fillStyle = color;
   ctx.fillRect(width/4, top_pos, cyl_width, bot_pos-top_pos);
 
   // border
-  // ctx.strokeStyle = "rgb(0,0,0)"; 
+  // ctx.strokeStyle = "rgb(0,0,0)";
   ctx.beginPath();
   ctx.arc(midx,top_pos,cyl_width/2+ctx.lineWidth/2,Math.PI,0,false);
   ctx.arc(midx,bot_pos,cyl_width/2+ctx.lineWidth/2,0,Math.PI,false);
   ctx.closePath();
   ctx.stroke();
 
-  // bottom 
+  // bottom
   // ctx.fillStyle = get_color(cyl_bot);
-  ctx.fillStyle = color; 
+  ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(midx,bot_pos,cyl_width,0,2*Math.PI,false);
   ctx.closePath();
   ctx.fill();
 
   var k = 0.7;
-  // ctx.strokeStyle = "rgb(255,0,0)"; 
+  // ctx.strokeStyle = "rgb(255,0,0)";
   ctx.beginPath();
   ctx.arc(midx,bot_pos,cyl_width+ctx.lineWidth/2,-0.5*k*Math.PI,(1+0.5*k)*Math.PI,false);
   // ctx.closePath();
@@ -432,12 +432,12 @@ var Render = {
   formatNumber: function(number, prefix) {
     var siPrefixes = ['k', 'M', 'G', 'T'];
     var siIndex = 0;
-  
+
     while (prefix && Math.abs(number) >= 1000 && siIndex < siPrefixes.length-1) {
       number /= 1000;
       siIndex++;
     }
-  
+
     var n1 = Math.abs(number);
     if (n1 >= 100) { var precision = Math.max(Render.options.precision-2,0) }
       else if (n1 >= 10) { var precision = Math.max(Render.options.precision-1,0) }
@@ -448,7 +448,7 @@ var Render = {
     if (prefix) {
       number += (siIndex > 0) ? '' + siPrefixes[siIndex-1] : '';
     }
-  
+
     return number;
   },
 }
@@ -499,7 +499,7 @@ var WidgetDial = {
           // end value
           this.el.value(this.end);
         }
-      }  
+      }
     }
     setTimeout($.proxy(intervalFunc, context), Render.options.animation_interval);
   },
@@ -532,7 +532,7 @@ var WidgetValue = {
     if (units==undefined) units = '';
     if (val==undefined) val = 0;
 
-    var value = Render.formatNumber(val, true);
+    var value = formatNumber(val, true);
     el.html(value+units);
   },
 }
