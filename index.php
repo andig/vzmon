@@ -390,14 +390,17 @@ function updatePerf(channel) {
 			}
 			console.info("[updatePerf] got daily data (" + json.data.tuples.length + " data points)");
 
+			// remove current day remainder
+			json.data.tuples.pop(); 
 			// find best day this year
-			json.data.tuples.pop();
 			generationMax = json.data.tuples.reduce(function(previousValue, currentValue, index, array) {
 				var perf = Math.abs(currentValue[1]) * 24 / 1000.0;
+				if (perf > (options.maxPerf || 8.0) * options.power) perf = previousValue;
 				return Math.max(previousValue, perf); 
 			}, 0);
 
-			generationYesterday = (json.data.tuples.length > 1) ? Math.abs(json.data.tuples[json.data.tuples.length-2][1]) * 24 / 1000.0 : 0;
+			// get yesterday's value from end of data
+			generationYesterday = (json.data.tuples.length > 0) ? Math.abs(json.data.tuples[json.data.tuples.length-1][1]) * 24 / 1000.0 : 0;
 
 			updatePerfChart(generationToday / 1000.0, generationYesterday, generationMax);
 		}).fail(failHandler(url, "updatePerf"));
@@ -433,7 +436,7 @@ $(document).ready(function() {
 							return;
 						}
 						if (json.data.consumption == 0) {
-							console.warn("[init] Consumption 0 for channel " + this._channel + "(" + json.data.tuples + " tuples)");
+							console.warn("[init] Consumption 0 for channel " + this._channel + " (" + json.data.tuples + " tuples)");
 						}
 
 		 				channels[this._channel].totalValue = Math.abs(channels[this._channel].totalValue || 0) * 1000.0 + Math.abs(json.data.consumption);

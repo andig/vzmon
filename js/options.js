@@ -5,11 +5,12 @@
  */
 
 // path to your VZ middleware
-var vzAPI = "http://localhost/middleware.php";
+// ATTENTION: make sure this is a publicly accessible URL - test from browser if unsure
+var vzAPI = "http://cpuidle.dyndns.org:8038/middleware.php";
 
 // path to forecast.io API
-var API_KEY = "NOKEY"; // goto forecast.io to obtain your own API key
-var COORDINATES = "52.0,9.0";           // your geo coordinates - find out by using Google Maps
+var API_KEY = "80c67e7668109f400e20c9dcc5ec0e16"; // goto forecast.io to obtain your own API key
+var COORDINATES = "52.283228,9.837533";           // your geo coordinates - find out by using Google Maps
 
 var weatherAPI = "https://api.forecast.io/forecast/" + API_KEY + "/" + COORDINATES + "?units=ca&exclude=flags,alerts,minutely,hourly";
 
@@ -20,15 +21,19 @@ var options = {
   plotTuples: 100,     // number of data tuples for plot
   animate: true,       // set to false to disable weather icon animation
   power: 6.916,        // plant power
+  maxPerf: 8.0,        // maximum theoretical solar performance (used to eliminate data issues)
 }
 
 // VZ channel information
 
 /*
   Each channel follows the same definition rules.
-  You can define additional channels following this pattern:
 
-  Make sure you have a channelDefinition called "generation" - this channel will be used for calculation performance ratio
+  Note:
+    - Make sure you have a channelDefinition called "generation" - this channel will be used for calculation performance ratio
+    - The order of channels matters- they will be draw on the chart according to the order in which they are defined.
+
+  You can define any number of channels following this pattern:
 
   channelDefinition: {
     name: "channel title",      // Display name - currently not used.
@@ -42,6 +47,7 @@ var options = {
       color: "red",             // CSS color value. If not defined, will not be plotted.
       lines: {                  // Line formatting
         fill: true,             // Defines if plot should be filled- leave false to draw a line.
+        fillColor: "rgba(255,0,0,0.1)"  // Color to use for filling the graph. Use rgba for transparency.
       }
     }
   }
@@ -93,14 +99,14 @@ var channels = {
   // plotOptions undefinied - only totals, no chart
   bezug: {
     name: "Bezug",
-    totalValue: eval(3152.0 - 9.0 - 21.0 - 5.0),
+    totalValue: eval(3152 - 9 - 21 - 5),
     totalAtDate: "1.4.2013",
   },
 
   // plotOptions undefinied - only totals, no chart
   lieferung: {
     name: "Lieferung",
-    totalValue: eval(7418.0 - 11.0 - 14.0 - 7.0),
+    totalValue: eval(7418 - 11 - 14 - 7 + 30),
     totalAtDate: "1.4.2013",
     sign: -1,
   }
