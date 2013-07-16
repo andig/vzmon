@@ -62,6 +62,7 @@ function RickshawD3(element) {
 	Plot.call(this, element);
 
 	// custom renderer - solves https://github.com/shutterstock/rickshaw/issues/121
+	//						and https://github.com/shutterstock/rickshaw/issues/277
 	Rickshaw.namespace('Rickshaw.Graph.Renderer.UnstackedArea');
 	Rickshaw.Graph.Renderer.UnstackedArea = Rickshaw.Class.create(Rickshaw.Graph.Renderer.Area, {
 		name: 'unstackedarea',
