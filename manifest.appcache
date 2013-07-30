@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# version 16
+# version 17
 
 ./index.php
 ./img/favicon.ico
@@ -13,9 +13,8 @@ CACHE MANIFEST
 
 # scripts
 
-./js/rickshaw/rickshaw.js
 ./js/rickshaw/rickshaw.min.js
-./js/rickshaw/d3.v2.js
+./js/rickshaw/d3.v2.min.js
 ./js/rickshaw/bullet.js
 
 ./js/flot/jquery.flot.js
