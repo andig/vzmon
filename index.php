@@ -47,8 +47,8 @@
     <script type="text/javascript" src="js/flot/jquery.flot.time.js"></script>
     <script type="text/javascript" src="js/flot/curvedLines.js"></script>
 
-	<script type="text/javascript" src="js/rickshaw/rickshaw.js"></script>
-	<script type="text/javascript" src="js/rickshaw/d3.v2.js"></script>
+	<script type="text/javascript" src="js/rickshaw/rickshaw.min.js"></script>
+	<script type="text/javascript" src="js/rickshaw/d3.v2.min.js"></script>
 	<script type="text/javascript" src="js/rickshaw/bullet.js"></script>
 	
 	<script type="text/javascript" src="js/plot.js"></script>
@@ -196,9 +196,9 @@ function updateWeather() {
 }
 
 function updateDatabaseStatus() {
-	var url = vzAPI + "/capabilities.json?padding=?&section=database";
+	var url = vzAPI + "/capabilities/database.json?padding=?";
 	$.getJSON(url, function(json) {
-		console.log(json.capabilities.database);
+		console.log("[updateDatabaseStatus]" + json.capabilities.database);
 		$("#database").html(Mustache.render($("#templateDatebase").html(), {
 			dbrows: formatNumber(json.capabilities.database.rows / 1000, {decimals:0, si:false}),
 			dbsize: formatNumber(json.capabilities.database.size / 1024 / 1024, {decimals:1, si:false})
@@ -231,7 +231,7 @@ function updateChannel(channel) {
 	if (!numTemplates) return;
 
 	// get data
-	var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=today&to=now";
+	var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=today&to=now";
 	$.getJSON(url, function(json) {
 		if (typeof json.data.tuples == "undefined") {
 			console.error("[updateChannel] No current data.tuples for channel " + channel);
@@ -273,7 +273,7 @@ function updatePlot() {
 		// only if channel is to be plotted
 		if (typeof channels[channel].plotOptions !== "undefined") {
 			console.info("[updatePlot] getting " + channel);
-			var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=" + options.sunriseTime + "&to=now&tuples=" + options.plotTuples;
+			var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=" + options.sunriseTime + "&to=now&tuples=" + options.plotTuples;
 			deferred.push(
 				$.getJSON(url).success(
 					$.proxy(function(json) {
@@ -329,8 +329,8 @@ function updatePerfChart(today, yesterday, max) {
 	}];
 
 	var margin = {top: 5, right: 0, bottom: 15, left: 40},
-	    width = 300 - margin.left - margin.right,
-	    height = 40 - margin.top - margin.bottom;
+	    width = $("#perf").width() - margin.left - margin.right,
+	    height = $("#perf").height() - margin.top - margin.bottom;
 
 	var chart = d3.bullet()
 	    .width(width)
@@ -378,7 +378,7 @@ function updatePerf(channel) {
 	else {
 		// get data
 		var date = new Date();
-		var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=1.1." + date.getFullYear() + "&to=now&group=day";
+		var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=1.1." + date.getFullYear() + "&to=now&group=day";
 		$.getJSON(url, function(json) {
 			if (typeof json.data.tuples == "undefined") {
 				console.error("[updatePerf] No current data.tuples for channel " + channel);
@@ -413,7 +413,7 @@ $(document).ready(function() {
 	// instantiate plot library by name - either RickshawD3 or Flot 
 	plot = new RickshawD3($("#chart"));
 
-	var url = vzAPI +"/channel.json?padding=?";
+	var url = vzAPI +"/channel.json?padding=?&client=raw";
 	$.getJSON(url, function(json) {
  		// get UUIDs for defined channels
  		for (var channel in channels) {
@@ -427,7 +427,7 @@ $(document).ready(function() {
 	 		}
 			else {
 	 			// do a one-time update of the totals if defined...
-	 			var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&from=" + channels[channel].totalAtDate + "&to=today&tuples=1";
+	 			var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=" + channels[channel].totalAtDate + "&to=today&tuples=1";
 	 			$.getJSON(url,
 	 				$.proxy(function(json) {
 			 			// console.info(json);
