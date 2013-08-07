@@ -366,12 +366,14 @@ function updatePerfChart(today, yesterday, max) {
 		.attr("class", "subtitle")
 		.attr("dy", "1em")
 		.text(function(d) { return d.subtitle; });
+
+	$("#perf").show();
 }
 
 function updatePerf(channel) {
 	console.info("[updatePerf] " + channel);
 
-	// hisorical values already collected?
+	// historical values already collected?
 	if (generationYesterday + generationMax > 0) {
 		updatePerfChart(generationToday / 1000.0, generationYesterday, generationMax);
 	}
