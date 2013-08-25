@@ -11,6 +11,7 @@ body {
   font-family: AvenirNextCondensed, "Arial Narrow", sans-serif, Arial, Helvetica;
   font-weight: normal;
   font-style: normal;
+  font-stretch: condensed;
 }
 
 /* helper classes */
@@ -39,6 +40,38 @@ body {
 .bullet .title { font-size: 14px; font-weight: bold; }
 .bullet .subtitle { fill: rgb(68, 68, 68); font-size: 10px; }
 
+/* NProgress bar */
+/* Make clicks pass-through */
+#nprogress {
+  pointer-events: none;
+  -webkit-pointer-events: none; }
+  #nprogress .bar {
+    background: #29d;
+
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 2px; }
+
+  /* Fancy blur effect */
+  #nprogress .peg {
+    display: block;
+    position: absolute;
+    right: 0px;
+    width: 100px;
+    height: 100%;
+    box-shadow: 0 0 10px #29d, 0 0 5px #29d;
+    opacity: 1.0;
+
+    -webkit-transform: rotate(3deg) translate(0px, -4px);
+    -moz-transform: rotate(3deg) translate(0px, -4px);
+    -ms-transform: rotate(3deg) translate(0px, -4px);
+    -o-transform: rotate(3deg) translate(0px, -4px);
+    transform: rotate(3deg) translate(0px, -4px); }
+
 /* debug classes */
 /*    div {
   border: 1px dashed red!important;
@@ -58,6 +91,11 @@ h1, h2 {
   max-width: 300px;
   height: 200px;
   overflow: hidden;
+}
+#perf {
+  display: none;
+  width: 300px;
+  height: 40px;
 }
 
 /* page formatting */
@@ -83,6 +121,7 @@ h1, h2 {
 /* styles */
 h1, h2 {
   font-family: AvenirNextCondensed, "Arial Narrow", Arial, Helvetica;
+  font-stretch: condensed;
 }
 h1 {
   font-weight: bold;
@@ -99,11 +138,13 @@ h2 {
 h2, .unit {
   font-size: 22px;
   font-weight: normal; 
+  font-stretch: condensed;
 }
 .largeValue {
   display: block;
   vertical-align: top;
   font-size: 72px;
   font-weight: bold;
+  font-stretch: condensed;
   line-height: 72px;
 }

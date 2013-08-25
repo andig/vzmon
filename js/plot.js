@@ -95,12 +95,15 @@ RickshawD3.prototype.render = function(data, sorted) {
 	for (var channel in sorted) {
 		var stroke = (typeof channels[channel].plotOptions.color == "undefined") ? null : channels[channel].plotOptions.color;
 		var color = (typeof channels[channel].plotOptions.lines.fillColor == "undefined" || !channels[channel].plotOptions.lines.fill) ? 'none' : channels[channel].plotOptions.lines.fillColor;
+		var interpolation = (typeof channels[channel].plotOptions.lines.interpolation == "undefined") ? 'cardinal' : channels[channel].plotOptions.lines.interpolation;
 
 		series.push({
 			name: channels[channel].name,
 			data: data[channel].data.tuples.map(mapVZtoRS),
 			stroke: (stroke) ? stroke : 'steelblue',
-			color: (color) ? color : 'steelblue'
+			color: (color) ? color : 'steelblue',
+			// TODO fixme
+			interpolation: interpolation,
 		});
 	}
 
@@ -120,7 +123,7 @@ RickshawD3.prototype.render = function(data, sorted) {
 	var xAxis = new Rickshaw.Graph.Axis.Time({
 		graph: graph,
 		orientation: 'bottom',
-		timeFixtures: new Rickshaw.Fixtures.LocalTime()
+		timeFixture: new Rickshaw.Fixtures.Time.Local()
 	});
 	xAxis.render();
 

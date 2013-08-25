@@ -34,7 +34,7 @@
 	<link rel="stylesheet" href="css/vzmon.css" type="text/css" />
 
 	<!-- js -->
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 
 	<script type="text/javascript" src="js/mustache.js"></script>
 	<script type="text/javascript" src="js/skycons.js"></script>
@@ -43,10 +43,11 @@
 	<script type="text/javascript" src="js/functions.js"></script>
 
 	<!-- plotting -->
+<!--
     <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
     <script type="text/javascript" src="js/flot/jquery.flot.time.js"></script>
     <script type="text/javascript" src="js/flot/curvedLines.js"></script>
-
+-->
 	<script type="text/javascript" src="js/rickshaw/rickshaw.min.js"></script>
 	<script type="text/javascript" src="js/rickshaw/d3.v2.min.js"></script>
 	<script type="text/javascript" src="js/rickshaw/bullet.js"></script>
@@ -54,6 +55,9 @@
 	<script type="text/javascript" src="js/plot.js"></script>
 
 	<link rel="stylesheet" href="css/rickshaw.min.css" type="text/css" />
+
+	<!-- nprogress -->	
+	<script type="text/javascript" src="js/nprogress.js"></script>
 
 	<style type="text/css">
 		@media screen and (/*orientation:landscape*/ min-width: 480px) {
@@ -104,6 +108,14 @@
 		 </div>
 	</div>
 
+	<div class="row">
+		<div id="chart"></div>
+	</div>
+
+	<div class="row">
+		<div id="perf"></div>
+	</div>
+
 	<!-- current values -->
 	<div id="generation" class="row nowrap" style="margin-top: 5px;">
 		<div class="w-150">
@@ -118,14 +130,6 @@
 		 		<h1 class="right">- <span class="unit">kWh total</span></h1>
 		 	</div>
 		</div>
-	</div>
-
-	<div class="row">
-		<div id="chart"></div>
-	</div>
-
-	<div class="row">
-		<div id="perf"></div>
 	</div>
 
 	<div id="bezug" class="row nowrap">
@@ -409,11 +413,37 @@ function updatePerf(channel) {
 	}
 }
 
+function progressBar() {
+	if (typeof NProgress !== 'undefined') {
+		NProgress.numCalls = NProgress.completedCalls = 0;
+
+		// var init = function() {}
+		NProgress.advance = function() {
+			NProgress.completedCalls++;
+			NProgress.set(Math.max(NProgress.status, NProgress.completedCalls / NProgress.numCalls));
+			if (NProgress.numCalls == NProgress.completedCalls) {
+				NProgress.numCalls = NProgress.completedCalls = 0;
+			}
+		}
+
+		$(document).ajaxSend(function() {
+			NProgress.numCalls++;
+			NProgress.set(Math.max(NProgress.status, NProgress.completedCalls / NProgress.numCalls));
+		}).ajaxSuccess(function() {
+			NProgress.advance();
+		}).ajaxError(function() {
+			NProgress.advance();
+		});
+	}
+}
+
 $(document).ready(function() {
 	// setup
 	icons = new Skycons();
 	// instantiate plot library by name - either RickshawD3 or Flot 
 	plot = new RickshawD3($("#chart"));
+	// add progress bar for ajax requests
+	progressBar();
 
 	var url = vzAPI +"/channel.json?padding=?&client=raw";
 	$.getJSON(url, function(json) {
