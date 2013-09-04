@@ -182,13 +182,13 @@ function updateWeather() {
 		json.currently.temperature = Math.round(json.currently.temperature);
 
 		if (typeof json.daily.data[0] !== "undefined") {
+			console.info("[updateWeather] sunrise/sunset: " + json.daily.data[0].sunriseTime +"/"+ json.daily.data[0].sunsetTime);
+
 			// xaxis minimum
-			console.info("[updateWeather] Sunrise: " + json.daily.data[0].sunriseTime);
 			plotOptions.xaxis.min = Math.floor(json.daily.data[0].sunriseTime / 3600) * 3600 * 1000;
 			options.sunriseTime = new Date(json.daily.data[0].sunriseTime * 1000).getUTCHours() + ":00";
 
 			// xaxis maximum
-			console.info("[updateWeather] Sunset: " + json.daily.data[0].sunsetTime);
 			plotOptions.xaxis.max = Math.ceil(json.daily.data[0].sunsetTime / 3600) * 3600 * 1000;
 		}
 
@@ -223,6 +223,7 @@ function updateTotals() {
 	console.info("[updateTotals]");
 	var deferred = [];
     var today = currentDate();
+today = "28.08.2013";
 
 	var totalStorage = {};
 	if (options.cache && localStorage.totals) {
@@ -234,22 +235,18 @@ function updateTotals() {
 		// channel without defined total
 		if (typeof channels[channel].totalAtDate == "undefined") continue;
 
-		var from = channels[channel].totalAtDate;
 		if (totalStorage[channel]) {
-		    // console.info("totalStorage["+channel+"] " + JSON.stringify(totalStorage[channel]));
-		    
-		    // only use localStorage if options were not changed
-		    if (totalStorage[channel].totalInitialAtDate == channels[channel].totalAtDate) {
-				channels[channel].totalValue = totalStorage[channel].totalValue;
-				from = totalStorage[channel].totalAtDate;
-		    }
-		}
+			console.info("[updateTotals] " + channel +" - "+ channels[channel].totalAtDate +":"+ channels[channel].totalValue
+													 +" - "+ totalStorage[channel].totalAtDate +":"+ totalStorage[channel].totalValue);
+			channels[channel].totalValue = totalStorage[channel].totalValue;
+			channels[channel].totalAtDate = totalStorage[channel].totalAtDate;
+	    }
 
 		// totals already up-to-date
-		if (from == today) continue;
+		if (channels[channel].totalAtDate == today) continue;
 
 		// do a one-time update of the totals if defined...
-		var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=" + from + "&to=today&tuples=1";
+		var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=" + channels[channel].totalAtDate + "&to=today&tuples=1";
 		deferred.push(
 			$.getJSON(url,
 				$.proxy(function(json) {
@@ -261,12 +258,12 @@ function updateTotals() {
 						console.warn("[updateTotals] Consumption 0 for channel " + this.channel + " (" + json.data.tuples + " tuples)");
 					}
 
-				    var totalValue = Math.abs(channels[this.channel].totalValue || 0) * 1000.0 + Math.abs(json.data.consumption);				    
+				    var totalValue = Math.abs(channels[this.channel].totalValue || 0) + Math.abs(json.data.consumption) / 1000.0;
+					console.info("[updateTotals] " + this.channel +" - "+ today +":"+ totalValue);
 
 	 				totalStorage[this.channel] = {
-	 					totalInitialAtDate: channels[this.channel].totalAtDate,
-	 					totalAtDate: today,
 	 					totalValue: totalValue,
+	 					totalAtDate: today,
 	 				}
 	 				channels[this.channel].totalValue = totalValue;
 				    // console.info("totalStorage["+channel+"] " + JSON.stringify(totalStorage[this.channel]));
@@ -331,7 +328,7 @@ function updateChannel(channel, json) {
 	}
 
 	// see if power rating desired
-	if (typeof channels[channel].power !== "undefined" && channels[channel].power > 0) {
+	if (channels[channel].power > 0) {
 		perfStorage.genToday = Math.abs(json.data.consumption) / 1000.0;
 		updatePerf(channel);
 	}
@@ -343,7 +340,7 @@ function updateChannel(channel, json) {
 
 	// if (totalsInitialized) {
 		$("#" + channel + "Total").html(Mustache.render($("#templateTotal").html(),
-			formatNumber(Math.abs(channels[channel].totalValue || 0) + Math.abs(json.data.consumption), formatTotals)));
+			formatNumber(Math.abs(channels[channel].totalValue || 0) * 1000.0 + Math.abs(json.data.consumption), formatTotals)));
 	// }
 
 	$("#" + channel).show();
@@ -561,13 +558,18 @@ $(document).ready(function() {
 	// add progress bar for ajax requests
 	progressBar();
 
+	// check if cache valid
+	var hash = getChannelHash();
+	if (!options.cache || JSON.parse(localStorage.channelHash !== hash)) {
+		localStorage.channels = "";
+		localStorage.totals = "";
+		localStorage.perf = "";
+	}
+	localStorage.channelHash = hash;
+
 	var channelStorage = {};
 	if (options.cache && localStorage.channels) {
 		channelStorage = JSON.parse(localStorage.channels);
-		// console.info("channelStorage: " + localStorage.channels);
-	}
-
-	if (typeof channelStorage.channelKey !== "undefined" && channelStorage.channelKey == getChannelHash()) {
 		initializeChannels(channelStorage.json);
 		return;
 	}
@@ -581,7 +583,6 @@ $(document).ready(function() {
 		// store
 		channelStorage = {
 			json: json,
-			channelKey: getChannelHash(),
 		}
 		localStorage.channels = JSON.stringify(channelStorage);
 	}).fail(failHandler(url, "init"));

@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# version 25
+# version 28
 
 ./index.php
 ./img/favicon.ico
@@ -28,6 +28,7 @@ CACHE MANIFEST
 ./js/mustache.js
 ./js/skycons.js
 ./js/nprogress.js
+./js/jquery.jpanelmenu.min.js
 
 ./js/functions.js
 ./js/options.js

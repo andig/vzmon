@@ -128,7 +128,7 @@ function getChannelFromUUID(aUUID) {
 function getChannelHash() {
   var key = "";
   for (var channel in channels) {
-    key += channel;
+    key += channel + "("+channels[channel].totalAtDate+":"+channels[channel].totalValue+")";
   }
   return(key);
 }
