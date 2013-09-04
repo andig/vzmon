@@ -1,10 +1,14 @@
 CACHE MANIFEST
-# version 19
+# version 25
 
 ./index.php
 ./img/favicon.ico
 ./img/startup.png
 ./img/startup@2x.png
+./img/startup-568h@2x.png
+./img/home-57.png
+./img/home-72.png
+./img/home-114.png
 
 ./css/vzmon.css
 ./css/rickshaw.min.css

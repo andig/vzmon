@@ -75,6 +75,14 @@ function formatNumber(number, options) {
   return s+unit;
 }
 
+function currentDate(aDate) {
+    var date = (aDate) ? aDate : new Date(); 
+    var dd = date.getDate(); 
+    var mm = date.getMonth()+1; //January is 0! 
+    var yyyy = date.getFullYear(); 
+    return ''+ ((dd<10)?'0'+dd:dd) +'.'+ ((mm<10)?'0'+mm:mm) +'.'+ yyyy;
+}
+
 function functionName() {
   console.debug(arguments.callee.caller.name);
 }
@@ -82,21 +90,47 @@ function functionName() {
 // json failure handler
 function failHandler(url, context) { 
   return function(jqXHR, textStatus, errorThrown) { 
+    // var responseText = jQuery.parseJSON(jqXHR.responseText); 
+    // console.error(responseText);
+
     // log the error to the console 
-    var msg = "Failed retrieving " + url;
-    if (typeof context !== "undefined") {
-      msg = "[" + context + "] " + msg;
+    var msg = 'Failed retrieving ' + url;
+    if (typeof context !== 'undefined') {
+      msg = '[' + context + '] ' + msg;
     }
     console.error(msg);
-    console.error("HTTP status " + jqXHR.status + ": " + textStatus, errorThrown, jqXHR.responseText);
+    console.error('HTTP status ' + jqXHR.status + ': ' + textStatus, errorThrown, jqXHR.responseText);
   }; 
 }
 
+/**
+ * Get UUID for channel with given title
+ */
 function getUUID(json, title) {
 	return(jQuery.map(json.channels, function(value) {
-		// console.log(value);
 		return (value.title == title) ? value.uuid : null;
 	})[0]);
+}
+
+/**
+ * Reverse mapping uuid->channel
+ */
+function getChannelFromUUID(aUUID) {
+  for (var key in uuid) {
+    if (uuid.hasOwnProperty(key) && uuid[key] == aUUID) return(key);
+  }
+  return(false);
+}
+
+/** 
+ * Get unique hash of channel config
+ */
+function getChannelHash() {
+  var key = "";
+  for (var channel in channels) {
+    key += channel;
+  }
+  return(key);
 }
 
 function mapWeatherIcon(icon) {
