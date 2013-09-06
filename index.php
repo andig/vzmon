@@ -62,9 +62,9 @@
 	<style type="text/css">
 		@media screen and (/*orientation:landscape*/ min-width: 480px) {
 			.row {
-			    /*max-width: 768px !important;*/
-			}
+			    /*max-width: 768px !important;*/ }
 		}
+
 		/*.rickshaw_graph .x_tick .title { bottom: -18px; }	*/
 	</style>
 </head>
@@ -98,7 +98,7 @@
 	-->
 
 	<!-- weather -->
-	<div class="row">
+	<div id="weather" class="row">
 		<div class="w-300">
 		    <canvas id="weather-icon" width="90" height="90"></canvas>
 			<div id="weather-text" class="text">
@@ -117,7 +117,7 @@
 	</div>
 
 	<!-- current values -->
-	<div id="generation" class="row nowrap" style="margin-top: 5px;">
+	<div id="generation" class="row nowrap">
 		<div class="w-150">
 			<h2>Solar generation</h2>
 			<div id="generationNow" class="largeValue">- <span class="unit">kW</span></div>
@@ -167,7 +167,9 @@
 var uuid = {};		// UUIDs
 var icons;			// forecast.io weather icons
 var plot;			// chart abstraction
-var perfStorage = {};	// performance values
+
+var perfStorage = {};	// performance values cache
+var totalStorage = {};	// totals cache
 
 var totalsInitialized = false;
 
@@ -182,7 +184,9 @@ function updateWeather() {
 		json.currently.temperature = Math.round(json.currently.temperature);
 
 		if (typeof json.daily.data[0] !== "undefined") {
-			console.info("[updateWeather] sunrise/sunset: " + json.daily.data[0].sunriseTime +"/"+ json.daily.data[0].sunsetTime);
+			console.info("[updateWeather] sunrise/sunset: " + 
+				currentTime(new Date(json.daily.data[0].sunriseTime * 1000)) +"/"+ 
+				currentTime(new Date(json.daily.data[0].sunsetTime * 1000)));
 
 			// xaxis minimum
 			plotOptions.xaxis.min = Math.floor(json.daily.data[0].sunriseTime / 3600) * 3600 * 1000;
@@ -222,10 +226,8 @@ function updateDatabaseStatus() {
 function updateTotals() {
 	console.info("[updateTotals]");
 	var deferred = [];
-    var today = currentDate();
-today = "28.08.2013";
+	var today = currentDate();
 
-	var totalStorage = {};
 	if (options.cache && localStorage.totals) {
 		totalStorage = JSON.parse(localStorage.totals);
 		// console.info("totalStorage: " + localStorage.totals);
@@ -240,44 +242,39 @@ today = "28.08.2013";
 													 +" - "+ totalStorage[channel].totalAtDate +":"+ totalStorage[channel].totalValue);
 			channels[channel].totalValue = totalStorage[channel].totalValue;
 			channels[channel].totalAtDate = totalStorage[channel].totalAtDate;
-	    }
+		}
 
 		// totals already up-to-date
 		if (channels[channel].totalAtDate == today) continue;
 
 		// do a one-time update of the totals if defined...
 		var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=" + channels[channel].totalAtDate + "&to=today&tuples=1";
+		console.info("[updateTotals] " + url);
 		deferred.push(
 			$.getJSON(url,
 				$.proxy(function(json) {
-					if (typeof json.data.consumption == "undefined") {
-						console.error("[updateTotals] No consumption data for channel " + this._channel);
+					if (!json.data.consumption) {
+						console.error("[updateTotals] No consumption data for channel " + this._channel + " (" + json.data.tuples + " tuples)");
 						return;
 					}
-					if (json.data.consumption == 0) {
-						console.warn("[updateTotals] Consumption 0 for channel " + this.channel + " (" + json.data.tuples + " tuples)");
-					}
 
-				    var totalValue = Math.abs(channels[this.channel].totalValue || 0) + Math.abs(json.data.consumption) / 1000.0;
-					console.info("[updateTotals] " + this.channel +" - "+ today +":"+ totalValue);
-
+					var totalValue = Math.abs(channels[this.channel].totalValue || 0) + Math.abs(json.data.consumption) / 1000.0;
 	 				totalStorage[this.channel] = {
 	 					totalValue: totalValue,
-	 					totalAtDate: today,
+	 					totalAtDate: this.today,
 	 				}
 	 				channels[this.channel].totalValue = totalValue;
-				    // console.info("totalStorage["+channel+"] " + JSON.stringify(totalStorage[this.channel]));
+					console.info("[updateTotals] " + this.channel + JSON.stringify(totalStorage[this.channel]));
 
-	 			}, {channel: channel})
+	 			}, {channel: channel, today: today})
 	 		).fail(failHandler(url, "updateTotals"))
 	 	)
 	}
 
 	$.when.apply(null, deferred).done(function() {
-		console.info("[updateTotals] finished");
+		// console.info("[updateTotals] finished");
 		totalsInitialized = true;
 		localStorage.totals = JSON.stringify(totalStorage);
-		// console.info("totalStorage: " + localStorage.totals);
 	});
 
 	return(deferred);
@@ -402,8 +399,8 @@ function updatePerfChart(power) {
 	}];
 
 	var margin = {top: 5, right: 0, bottom: 15, left: 40},
-	    width = $("#perf").width() - margin.left - margin.right,
-	    height = $("#perf").height() - margin.top - margin.bottom;
+		width = $("#perf").width() - margin.left - margin.right,
+		height = $("#perf").height() - margin.top - margin.bottom;
 
 	var chart = d3.bullet()
 	    .width(width)
@@ -528,6 +525,13 @@ function refreshData() {
 	updateChannels();
 }
 
+function resetCache() {
+	localStorage.channels = "";
+	localStorage.totals = "";
+	localStorage.perf = "";
+	totalsInitialized = false;
+}
+
 function initializeChannels(json) {
 	console.info("[initializeChannels]");
 
@@ -558,18 +562,13 @@ $(document).ready(function() {
 	// add progress bar for ajax requests
 	progressBar();
 
-	// check if cache valid
+	// check if initialization from cache possible
 	var hash = getChannelHash();
-	if (!options.cache || JSON.parse(localStorage.channelHash !== hash)) {
-		localStorage.channels = "";
-		localStorage.totals = "";
-		localStorage.perf = "";
+	var channelStorage = JSON.parse(localStorage.channels) || {};
+	if (!options.cache || channelStorage.hash !== hash) {
+		resetCache();
 	}
-	localStorage.channelHash = hash;
-
-	var channelStorage = {};
-	if (options.cache && localStorage.channels) {
-		channelStorage = JSON.parse(localStorage.channels);
+	else if (options.cache && channelStorage.json) {
 		initializeChannels(channelStorage.json);
 		return;
 	}
@@ -582,6 +581,7 @@ $(document).ready(function() {
 
 		// store
 		channelStorage = {
+			hash: hash,
 			json: json,
 		}
 		localStorage.channels = JSON.stringify(channelStorage);

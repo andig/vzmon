@@ -76,11 +76,20 @@ function formatNumber(number, options) {
 }
 
 function currentDate(aDate) {
-    var date = (aDate) ? aDate : new Date(); 
-    var dd = date.getDate(); 
-    var mm = date.getMonth()+1; //January is 0! 
-    var yyyy = date.getFullYear(); 
-    return ''+ ((dd<10)?'0'+dd:dd) +'.'+ ((mm<10)?'0'+mm:mm) +'.'+ yyyy;
+  var date = (aDate) ? aDate : new Date(); 
+  // return date.toLocaleDateString("de-DE", {timeZone: "UTC", year: "numeric", month: "numeric", day: "numeric"}); 
+  var dd = date.getDate(); 
+  var mm = date.getMonth()+1; //January is 0! 
+  var yyyy = date.getFullYear(); 
+  return ''+ ((dd<10)?'0'+dd:dd) +'.'+ ((mm<10)?'0'+mm:mm) +'.'+ yyyy;
+}
+
+function currentTime(aDate) {
+  var date = (aDate) ? aDate : new Date();
+  return date.toLocaleTimeString("de-DE", {timeZone: "UTC"}); 
+  // var hrs = date.getHours();
+  // var min = date.getMinutes();
+  // return ((hrs<10) ? '0'+hrs : hrs) + ':' + ((min<10) ? '0'+min : min);
 }
 
 function functionName() {
