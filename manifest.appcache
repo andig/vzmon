@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# version 30
+# version 35
 
 ./index.php
 ./img/favicon.ico
@@ -9,6 +9,10 @@ CACHE MANIFEST
 ./img/home-57.png
 ./img/home-72.png
 ./img/home-114.png
+
+./img/info.png
+./img/warn.png
+./img/error.png
 
 ./css/vzmon.css
 ./css/rickshaw.min.css
@@ -31,6 +35,7 @@ CACHE MANIFEST
 ./js/jquery.jpanelmenu.min.js
 
 ./js/functions.js
+./js/console.js
 ./js/options.js
 ./js/plot.js
 

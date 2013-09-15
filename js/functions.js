@@ -18,15 +18,13 @@ function formatNumber(number, options) {
 	// Strip all characters but numerical ones.
 	number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
 	var // n = !isFinite(+number) ? 0 : +number,
-      dec      = (typeof options !== 'undefined' && typeof options.dec_point !== 'undefined') ? options.dec_point : '.',
-    	sep      = (typeof options !== 'undefined' && typeof options.thousands_sep !== 'undefined') ? options.thousands_sep : '',
-      prec     = (typeof options !== 'undefined' && typeof options.decimals !== 'undefined') ? options.decimals : 1,
-    	unit     = (typeof options !== 'undefined' && typeof options.unit !== 'undefined') ? options.unit : '',
-    	prefix   = (typeof options !== 'undefined' && typeof options.si !== 'undefined') ? 
-                  ((typeof options.si === 'number') ? options.si : 1000) : false,
-    	pretty   = (typeof options !== 'undefined' && typeof options.pretty !== 'undefined') ? 
-                  ((typeof options.pretty === 'number') ? options.pretty : 10) : false,
-    	array    = (typeof options !== 'undefined' && typeof options.array !== 'undefined') ? options.array : false,
+      dec      = (typeof (options || {}).dec_point !== "undefined") ? options.dec_point : '.',
+    	sep      = (typeof (options || {}).thousands_sep !== "undefined") ? options.thousands_sep : '',
+      prec     = (typeof (options || {}).decimals !== "undefined") ? options.decimals : 1,
+    	unit     = (typeof (options || {}).unit !== "undefined") ? options.unit : '',
+    	prefix   = (typeof (options || {}).si !== "undefined") ? ((typeof options.si === 'number') ? options.si : 1000) : false,
+    	pretty   = (typeof (options || {}).pretty !== "undefined") ? ((typeof options.pretty === 'number') ? options.pretty : 10) : false,
+    	array    = (typeof (options || {}).array !== "undefined") ? options.array : false,
     	s = '',
     	siPrefixes = ['k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'],
     	siIndex = 0,
@@ -72,21 +70,25 @@ function formatNumber(number, options) {
   	return(res);
   }
 
-  return s+unit;
+  return s + unit;
+}
+
+function daysInMonth(month, year) {
+  return new Date(year, month+1, 0).getDate();
 }
 
 function currentDate(aDate) {
-  var date = (aDate) ? aDate : new Date(); 
+  var date = (aDate) ? aDate : new Date();
   // return date.toLocaleDateString("de-DE", {timeZone: "UTC", year: "numeric", month: "numeric", day: "numeric"}); 
-  var dd = date.getDate(); 
-  var mm = date.getMonth()+1; //January is 0! 
-  var yyyy = date.getFullYear(); 
+  var dd = date.getDate();
+  var mm = date.getMonth()+1; // January is 0!
+  var yyyy = date.getFullYear();
   return ''+ ((dd<10)?'0'+dd:dd) +'.'+ ((mm<10)?'0'+mm:mm) +'.'+ yyyy;
 }
 
 function currentTime(aDate) {
   var date = (aDate) ? aDate : new Date();
-  return date.toLocaleTimeString("de-DE", {timeZone: "UTC"}); 
+  return date.toLocaleTimeString("de-DE", {timeZone: "UTC"});
   // var hrs = date.getHours();
   // var min = date.getMinutes();
   // return ((hrs<10) ? '0'+hrs : hrs) + ':' + ((min<10) ? '0'+min : min);
@@ -109,7 +111,7 @@ function failHandler(url, context) {
     }
     console.error(msg);
     console.error('HTTP status ' + jqXHR.status + ': ' + textStatus, errorThrown, jqXHR.responseText);
-  }; 
+  }
 }
 
 /**
@@ -118,7 +120,7 @@ function failHandler(url, context) {
 function getUUID(json, title) {
 	return(jQuery.map(json.channels, function(value) {
 		return (value.title == title) ? value.uuid : null;
-	})[0]);
+	})[0])
 }
 
 /**
@@ -130,6 +132,60 @@ function getChannelFromUUID(aUUID) {
   }
   return(false);
 }
+
+var cache = (function() {
+  return {
+    /**
+     * Get object from localStorage by path
+     */
+    get: function (path, validHash, obj) {
+      // console.log("[getCache] "+path+","+validHash+","+JSON.stringify(obj));
+      var segments = path.trim().split('.');
+      var segment = segments.shift();
+      var result = (obj) ? obj[segment] : ((localStorage[segment]) ? JSON.parse(localStorage[segment]) : false);
+      // console.log("[getCache] result("+segment+"): "+JSON.stringify(result));
+      if (!result) return (false);
+
+      if (segments.length) {
+        return (this.get(segments.join('.'), validHash, result));
+      }
+      else {
+        if (validHash) {
+          if (validHash !== result.hash) return (false);
+          delete result.hash;
+        }
+        return (result);
+      }
+    },
+
+    /**
+     * Put object to localStorage by path
+     */
+    put: function (path, obj, validHash, root) {
+      // console.log("[putCache] "+path+","+JSON.stringify(obj)+","+JSON.stringify(root));
+      var segments = path.trim().split('.');
+      var segment = segments.shift();
+
+      if (root) {
+        if (validHash && segments.length == 0) {
+          obj.hash = validHash; // add hash to leaf node
+        }     
+        root[segment] = (segments.length) ? put(segments.join('.'), obj, validHash, root[segment] || {}) : obj;
+        // console.log("[putCache] root("+segment+"): " + JSON.stringify(root));
+        return (root);
+      }
+
+      root = (localStorage[segment]) ? JSON.parse(localStorage[segment]) || {} : {};    
+      if (segments.length) {
+        obj = this.put(segments.join('.'), obj, validHash, root)
+      }
+      else if (validHash) {
+        obj.hash = validHash; // add hash to leaf node
+      }
+      localStorage[segment] = JSON.stringify(obj);
+    }
+  }
+}());
 
 /** 
  * Get unique hash of channel config

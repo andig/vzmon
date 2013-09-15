@@ -82,11 +82,15 @@ RickshawD3.prototype = new Plot();
 
 RickshawD3.prototype.constructor = RickshawD3;
 
-RickshawD3.prototype.unitFormatter = function(v) {
+RickshawD3.prototype.unitFormatterkW = function(v) {
 	return (v > 0) ? formatNumber(v/1000.0, {decimals: 1}) + 'kW' : '';
 }
 
-RickshawD3.prototype.render = function(data) {
+RickshawD3.prototype.unitFormatterkWh = function(v) {
+	return (v > 0) ? formatNumber(v/1000.0, {decimals: 0}) + 'kWh' : '';
+}
+
+RickshawD3.prototype.render = function(data, consumption) {
 	// use sorted data for building plot series
 	var series = [];
 
@@ -117,11 +121,13 @@ RickshawD3.prototype.render = function(data) {
 		element: $(this.element).get(0), //document.querySelector('#chart'),
 		width: $(this.element).width(),
 		height: $(this.element).height(),
-		renderer: Rickshaw.Graph.Renderer.UnstackedArea,
+		renderer: (consumption) ? "bar" : Rickshaw.Graph.Renderer.UnstackedArea,
 		stroke: true,
 		//preserve: true,
 		series: series
 	});
+	if (consumption) graph.interpolation = "linear";
+	if (consumption) graph.renderer.unstack = true;
 	graph.render();
 
 	var xAxis = new Rickshaw.Graph.Axis.Time({
@@ -133,7 +139,7 @@ RickshawD3.prototype.render = function(data) {
 
 	var yAxis = new Rickshaw.Graph.Axis.Y({
 		graph: graph,
-		tickFormat: this.unitFormatter
+		tickFormat: (consumption) ? this.unitFormatterkWh : this.unitFormatterkW,
 	});
 	yAxis.render();
 }
