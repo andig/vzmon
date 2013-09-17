@@ -160,6 +160,8 @@ var cache = (function() {
 
     /**
      * Put object to localStorage by path
+     *
+     * @todo Fix "hash" being added to obj when saving with hash
      */
     put: function (path, obj, validHash, root) {
       // console.log("[putCache] "+path+","+JSON.stringify(obj)+","+JSON.stringify(root));

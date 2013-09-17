@@ -98,8 +98,9 @@ RickshawD3.prototype.render = function(data, consumption) {
 		return { x: tuple[0]/1000.0, y: tuple[1] }
 	}
 
-	for (var channel in channels) {
-		if (typeof channels[channel].plotOptions == 'undefined' || typeof data[channel] == "undefined") continue;
+	// in order of data provided
+	for (var channel in data) {
+		// if (typeof channels[channel].plotOptions == 'undefined' || typeof data[channel] == "undefined") continue;
 
 		var stroke = (typeof channels[channel].plotOptions.color == 'undefined') ? null : channels[channel].plotOptions.color;
 		var color = (typeof channels[channel].plotOptions.lines.fillColor == 'undefined' || !channels[channel].plotOptions.lines.fill) ? 'none' : channels[channel].plotOptions.lines.fillColor;
@@ -127,7 +128,7 @@ RickshawD3.prototype.render = function(data, consumption) {
 		series: series
 	});
 	if (consumption) graph.interpolation = "linear";
-	if (consumption) graph.renderer.unstack = true;
+	// if (consumption) graph.renderer.unstack = true;
 	graph.render();
 
 	var xAxis = new Rickshaw.Graph.Axis.Time({
