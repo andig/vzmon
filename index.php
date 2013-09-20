@@ -11,13 +11,13 @@
 	<!-- iPhone settings -->
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 	<link rel="apple-touch-icon" sizes="57x57" href="img/home-57.png" />
 	<link rel="apple-touch-icon" sizes="72x72" href="img/home-72.png" />
 	<link rel="apple-touch-icon" sizes="114x114" href="img/home-114.png" />
 
-	<!-- Startup images -->
-	<!-- Source: https://gist.github.com/tfausak/2222823 -->
+	<!-- Startup images https://gist.github.com/tfausak/2222823 -->
 
 	<!-- iPhone - iPod touch - 320x460 -->
 	<link rel="apple-touch-startup-image" href="img/startup.png" media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 1)">
@@ -25,6 +25,13 @@
 	<link rel="apple-touch-startup-image" href="img/startup@2x.png" media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)">
 	<!-- iPhone 5 - iPod 5 (Retina) - 640x1096 -->
 	<link rel="apple-touch-startup-image" href="img/startup-568h@2x.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+
+	<style type="text/css">
+		/* iPhone-specific styles */
+		body {
+			/*padding-top: 10px!important;*/ /* iOS7 WebApp */
+		}
+	</style>
 <?php } else { ?>
 	<meta name="viewport" content="width=device-width" />
 <?php } ?>
@@ -41,6 +48,7 @@
 
 	<script type="text/javascript" src="js/mustache.js"></script>
 	<script type="text/javascript" src="js/skycons.js"></script>
+	<script type="text/javascript" src="js/moment.min.js"></script>
 
 	<script type="text/javascript" src="js/options.js"></script>
 	<script type="text/javascript" src="js/functions.js"></script>
@@ -60,32 +68,38 @@
 
 	<style type="text/css">
 		@media screen and (/*orientation:landscape*/ min-width: 480px) {
-			.row {
+			.row, .panel {
 			    max-width: 480px !important; }
 			.large-2 {
-				width: 50%; 
+				width: 50%;
+				padding: 0 10px;
 				position: relative; 
 				float: left; }
 			#weather-icon {
 				width: 42px !important;
 				height: 42px !important; }
-			#chart, #chart > svg {
+			#chart {
 				width: 220px !important;
-				height: 144px !important; }
-			#perf, #perf > svg {
+				height: 155px !important; }
+			#perf {
 				width: 220px !important; 
-				height: 36px;}
+				height: 36px !important; }
 
-			h1, h2 > span, h3 > span, #weather-text > div {
+			nav ul {
+				font-size: 18px; }
+
+			h1, h2 > span, h3 > span {
 				font-size: 18px !important; }
 			h2 {
-				font-size: 54px !important; }
+				font-size: 58px !important; 
+				line-height: 1.2 !important; }
 			h3 {
 				font-size: 26px !important; }
 		}
-/*
+
 		.row {
-			border: 1px solid red; }*/
+			/*background-color: #888888;*/
+			/*border: 1px solid red;*/ }
 
 		/* Header */
 		header.primary { height: 49px; color: #333; background-color: #dadada; position: relative; border-bottom: solid 1px #f8f8f8; border-radius: 3px 3px 0 0;}
@@ -103,16 +117,24 @@
 
 	<nav id="menu" class="hidden">
 		<ul>
-			<li><a href="#" panel="#main">Main</a>
-				<ul id="submenuMain">
-					<li class="active"><a href="#" id="plotDay">Day</a></li>
-					<li><a href="#" id="plotMonth">Month</a></li>
-					<li><a href="#" id="plotYear">Year</a></li>
-				</ul>
-			</li>
+			<li class="section">Plant</li>
+			<li class="active" section="plant"><a href="#">Default</a></li>
+			
+<!-- <li><ul> -->
+			<li class="section">Range</li>
+			<li class="active" section="range"><a href="#" id="day">Day</a></li>
+			<li section="range"><a href="#" id="month">Month</a></li>
+			<li section="range"><a href="#" id="year">Year</a></li>
+<!-- </ul></li> -->
+			
+			<li class="section">Mode</li>
+			<li class="active" section="mode"><a href="#" id="fixed">Fixed</a></li>
+			<li section="mode"><a href="#" id="rolling">Rolling</a></li>
+			
+			<li class="section">Functions</li>
 			<!-- <li><a href="#" panel="#database">Database</a></li> -->
 			<?php if ($browser == 'iphone') { ?><li><a href="#" panel="#console" id="debug">Console</a></li><?php } ?>
-			<li><a href="#" panel="#main" id="reset">Reset</a></li>
+			<li><a href="#" id="reset">Reset</a></li>
 		</ul>
 	</nav>
 
@@ -124,28 +146,37 @@
 			<h2 class="small-2">{{currently.temperature}}<span>° {{currently.summary}}</span></h2>
 		</div>
 		<div id="templateData">
-			<div id="{{name}}" class="row hidden">
+			<div id="{{name}}" class="hidden">
 				<h1>{{title}}</h1>
-				<h2 id="{{name}}Now" class="small-2"><span>kW</span></h2><div class="small-2">
-			 		<h3 id="{{name}}Today"><span>kWh today</span></h3>
-			 	 	<h3 id="{{name}}Total"><span>kWh total</span></h3>
+				<h2 id="{{name}}Now" class="small-2 templateNow">{{value}}<span>{{unit}}</span></h2><div class="small-2">
+			 		<h3 id="{{name}}Today" class="templateToday">{{value}}<span>{{unit}} today</span></h3>
+			 	 	<h3 id="{{name}}Total" class="templateTotal">{{value}}<span>{{unit}} total</span></h3>
 				</div>
 			</div>
 		</div>
-		<div id="templateNow">
-			<h2 class="small-2">{{value}}<span>{{unit}}</span></h2>
-		</div>
-		<div id="templateToday">
-		 	<h3>{{value}}<span>{{unit}} today</span></h3>
-		</div>
-		<div id="templateTotal">
-		 	<h3>{{value}}<span>{{unit}} total</span></h3>
-		</div>
+		<ul id="templateConsole">
+			<li class="{{type}}"><span>{{time}}</span>{{value}}</li>
+		</ul>
 	</div>
 
 	<!-- 
 		Panels
 	-->
+	<div id="main" class="panel">
+		<div class="large-2">
+			<div id="weather" class="hidden">
+			    <canvas id="weather-icon" width="54" height="54"></canvas>
+				<div id="weather-text"></div>
+			</div>
+
+			<div id="chart"></div>
+
+			<div id="perf"></div>
+		</div>
+
+		<div id="mainData" class="large-2"></div>
+	</div>
+
 	<div id="database" class="panel hidden">
 		<h1>Database status</h1>
 		<h3 id="dbSize">Size: - <span class="unit">MB</span></h3>
@@ -154,59 +185,7 @@
 
 	<div id="console" class="panel hidden">
 		<h1>Console</h1>
-		<ul class="console"></ul>
-	</div>
-
-	<div id="main" class="panel">
-		<div class="row">
-
-			<div class="large-2">
-				<!-- weather -->
-				<div id="weather" class="row hidden">
-				    <canvas id="weather-icon" width="54" height="54"></canvas>
-					<div id="weather-text">
-						<h2></h2>
-						<div></div>
-					</div>
-				</div>
-
-				<div class="row">
-					<div id="chart"></div>
-				</div>
-
-				<div class="row">
-					<div id="perf"></div>
-				</div>
-			</div>
-
-			<div id="mainData" class="large-2">
-<!--
-				<div id="generation" class="row hidden">
-					<h1>Generation</h1>
-					<h2 id="generationNow" class="small-2"><span>kW</span></h2><div class="small-2">
-				 		<h3 id="generationToday"><span>kWh today</span></h3>
-				 	 	<h3 id="generationTotal"><span>kWh total</span></h3>
-					</div>
-				</div>
-
-				<div id="bezug" class="row hidden">
-					<h1>Usage</h1>
-					<h2 id="bezugNow" class="small-2"><span>W</span></h2><div class="small-2">
-				 		<h3 id="bezugToday"><span>kWh today</span></h3>
-				 	 	<h3 id="bezugTotal"><span>kWh total</span></h3>
-					</div>
-				</div>
-
-				<div id="lieferung" class="row hidden">
-					<h1>Supply</h1>
-					<h2 id="lieferungNow" class="small-2"><span>W</span></h2><div class="small-2">
-				 		<h3 id="lieferungToday"><span>kWh today</span></h3>
-				 	 	<h3 id="lieferungTotal"><span>kWh total</span></h3>
-					</div>
-				</div>
-			</div>
--->
-		</div>
+		<ul id="consoleContainer" class="console"></ul>
 	</div>
 
 <script type="text/javascript">
@@ -216,7 +195,9 @@ var plot;			// chart abstraction
 var jPM;			// menu
 
 var uuid = {};		// UUIDs
-var plotMode = "day";
+var plotRange = "day";
+var plotMode = "fixed";
+var refresh = false;
 
 /**
  * Get local weather and show
@@ -245,15 +226,13 @@ function updateWeather() {
 		$("#weather").show();
 
 		icons.set($("#weather-icon").get(0), mapWeatherIcon(json.currently.icon));
-		if (typeof options.animate !== "undefined" && options.animate) {			
-			icons.play();
-		}
+		if (options.animate) icons.play();
 	}
 
 	// use cache?
 	var valid = Math.floor(new Date().getTime()/1000/300); // 5min
 	if (options.cache) {
-		var json = cache.get("weather", valid);
+		var json = cache.get("vzmon.weather", valid);
 		if (json) {
 			worker(json);
 			return;
@@ -263,7 +242,7 @@ function updateWeather() {
 	var url = weatherAPI + "&callback=?";
 	$.getJSON(url, function(json) {
 		worker(json);
-		cache.put("weather", json, valid);
+		cache.put("vzmon.weather", json, valid);
 	}).fail(failHandler(url, "updateWeather"));
 }
 
@@ -286,25 +265,25 @@ function updateDatabaseStatus() {
  */
 function updateTotals() {
 	var deferred = [];
-    var today = currentDate();
+    var today = moment().startOf("day").format(options.dateFormat);
 
 	for (var channel in channels) {
 		// channel without defined total
-		if (typeof channels[channel].totalAtDate == "undefined") continue;
+		if (typeof channels[channel].total == "undefined") continue;
 
-		var totalStorage = (options.cache) ? cache.get("totals." + channel) : false;
+		var totalStorage = (options.cache) ? cache.get("vzmon.totals." + channel) : false;
 		if (totalStorage) {
-			console.info("[updateTotals] " + channel +" - "+ channels[channel].totalAtDate +":"+ channels[channel].totalValue
-													 +" - "+ totalStorage.totalAtDate +":"+ totalStorage.totalValue);
-			channels[channel].totalValue = totalStorage.totalValue;
-			channels[channel].totalAtDate = totalStorage.totalAtDate;
+			console.info("[updateTotals] " + channel +" "+ channels[channel].total.atDate +":"+ channels[channel].total.value
+													 +" "+ totalStorage.atDate +":"+ totalStorage.value);
+			channels[channel].total.value = totalStorage.value;
+			channels[channel].total.atDate = totalStorage.atDate;
 	    }
 
 		// totals already up-to-date
-		if (channels[channel].totalAtDate == today) continue;
+		if (channels[channel].total.atDate == today) continue;
 
 		// do a delta update of the totals
-		var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=" + channels[channel].totalAtDate + "&to=today&tuples=1";
+		var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=" + channels[channel].total.atDate + "&to=today&tuples=1";
 		console.info("[updateTotals] " + url);
 		deferred.push(
 			$.getJSON(url,
@@ -314,17 +293,15 @@ function updateTotals() {
 						return;
 					}
 
-					var totalValue = Math.abs(channels[this.channel].totalValue || 0) + Math.abs(json.data.consumption) / 1000.0;
-	 				channels[this.channel].totalValue = totalValue;
+					var totalValue = Math.abs(channels[this.channel].total.value || 0) + Math.abs(json.data.consumption) / 1000.0;
+	 				channels[this.channel].total.value = totalValue;
 
 	 				// save
-	 				var totalStorage = {
-	 					totalValue: totalValue,
-	 					totalAtDate: this.today,
-	 				}
-	 				cache.put("totals." + this.channel, totalStorage)
-
-				    console.info("[updateTotals] " + this.channel + JSON.stringify(totalStorage));	 				
+	 				cache.put("vzmon.totals." + this.channel, {
+	 					value: totalValue,
+	 					atDate: this.today,
+	 				});
+					console.info("[updateTotals] " + this.channel + " " + JSON.stringify(cache.get("vzmon.totals." + this.channel)));
 	 			}, {channel: channel, today: today})
 	 		).fail(failHandler(url, "updateTotals"))
 	 	)
@@ -346,14 +323,16 @@ function updateCurrentValues() {
 	var worker = function(json) {
 		for (var i=0; i<json.data.length; i++) {
 			var channel = getChannelFromUUID(json.data[i].uuid);
-			updateChannel(channel, {data: json.data[i]});
+			updateChannel(channel, {
+				data: json.data[i]
+			});
 		}
 	}
 
 	// use cache?
 	var valid = Math.floor(new Date().getTime() / (1000 * (options.updateInterval||1) * 60)); // 1min
 	if (options.cache) {
-		var json = cache.get("current", valid);
+		var json = cache.get("vzmon.current", valid);
 		if (json) {
 			worker(json);
 			return;
@@ -361,22 +340,17 @@ function updateCurrentValues() {
 	}
 
 	// get data
-	var templates = ["Now", "Today", "Total"];
 	var url = vzAPI + "/data.json?padding=?&client=raw&from=today&to=now";
 	for (var channel in channels) {
 		// is the channel used at all?
-		for (var i in templates) {
-			if ($("#" + channel + templates[i]).length > 0) {
-				// if used, add to query
-				url += "&uuid[]=" + uuid[channel];
-				break;
-			}
+		if (typeof channels[channel].total !== "undefined") {
+			url += "&uuid[]=" + uuid[channel];
 		}
 	}
 
 	$.getJSON(url, function(json) {
 		worker(json);
-		cache.put("current", json, valid);
+		cache.put("vzmon.current", json, valid);
 	}).fail(failHandler(url, "updateCurrentValues"));
 }
 
@@ -397,18 +371,21 @@ function updateChannel(channel, json) {
 
 	// see if power rating desired
 	if (channels[channel].power > 0) {
-		cache.put("perf.genToday", Math.abs(json.data.consumption) / 1000.0);
+		cache.put("vzmon.perf.genToday", Math.abs(json.data.consumption) / 1000.0);
 		updatePerformance(channel);
 	}
 
-	$("#" + channel + "Now").html(Mustache.render($("#templateNow").html(),
-		formatNumber(Math.abs(json.data.tuples[json.data.tuples.length-1][1]), formatCurrent)));
-	$("#" + channel + "Today").html(Mustache.render($("#templateToday").html(),
-		formatNumber(Math.abs(json.data.consumption), formatConsumption)));
+	$("#" + channel + "Now").html(Mustache.render($("#templateData .templateNow").html(),
+		formatNumber(Math.abs(json.data.tuples[json.data.tuples.length-1][1]), formatCurrent))
+	);
+	$("#" + channel + "Today").html(Mustache.render($("#templateData .templateToday").html(),
+		formatNumber(Math.abs(json.data.consumption), formatConsumption))
+	);
 
 	// if (totalsInitialized) {
-		$("#" + channel + "Total").html(Mustache.render($("#templateTotal").html(),
-			formatNumber(Math.abs(channels[channel].totalValue || 0) * 1000.0 + Math.abs(json.data.consumption), formatTotals)));
+	$("#" + channel + "Total").html(Mustache.render($("#templateData .templateTotal").html(),
+		formatNumber(Math.abs(channels[channel].total.value || 0) * 1000.0 + Math.abs(json.data.consumption), formatTotals))
+	);
 	// }
 
 	$("#" + channel).show();
@@ -445,38 +422,50 @@ function stackData(data) {
  * Get plot data and show
  */
 function updatePlot() {
+	var range = plotRange; // local copy
 	var mode = plotMode; // local copy
-	console.info("[updatePlot] " + mode);
+	console.info("[updatePlot] " + range);
 
 	var date = new Date();
-	var valid = (mode == "day") ? Math.floor(date.getTime()/1000/300) : currentDate();
-	var consumption = mode == "year" || mode == "month";
+	var valid = (range == "day") ? Math.floor(date.getTime()/1000/300) : moment().startOf("day").format(options.dateFormat);
+	var consumption = range == "year" || range == "month";
 
 	// use cache?
 	if (options.cache) {
-		var data = cache.get("consumption." + mode, valid);
+		var data = cache.get("vzmon.consumption." + range + "." + mode, valid);
 		if (data) {
 			plot.render(data, consumption);
 			return;
 		}
 	}
 
-	var range;
-	if (mode == "year") {
-		range = "from=1.1." + date.getFullYear() + "&to=today&group=month";
+	var dataRange;
+	// TODO fix period start
+	if (range == "year") {
+		var from = (mode == "fixed") ?
+						moment().startOf('year').subtract('hours', 1) :
+						moment().subtract('years', 1).startOf('month').subtract('hours', 1);
+		dataRange = "from=" + from.format(options.dateFormat) + "&to=today&group=month";
 	}
-	else if (mode == "month") {
-		range = "from=1." + (date.getMonth()+1) +"."+ date.getFullYear() + "&to=today&group=day"; // January is 0! 
+	else if (range == "month") {
+		var from = (mode == "fixed") ?
+						moment().startOf('month').subtract('hours', 1) :
+						moment().subtract('months', 1).startOf('day').subtract('hours', 1);
+
+		dataRange = "from=" + from.format(options.dateFormat) + "&to=today&group=day"; // January is 0! 
 	}
 	else {
-		range = "client=raw&from=" + options.sunriseTime + "&to=now&tuples=" + options.plotTuples;
+		var from = (mode == "fixed") ?
+						moment(options.sunriseTime, options.timeFormat) :
+						moment().subtract('hours', 24);
+		dataRange = "from=" + from.format(options.dateTimeFormat) + "&to=now&tuples=" + options.plotTuples;
 	}
-	var url = vzAPI + "/data.json?padding=?&" + range;
+	var url = vzAPI + "/data.json?padding=?&client=raw&" + dataRange;
 
 	// generate compound request for all channels
 	for (var channel in channels) {
 		// only if channel is to be plotted
-		if (typeof channels[channel].plotOptions !== "undefined") {
+		if (typeof channels[channel].plot !== "undefined") {
 			console.info("[updatePlot] adding " + channel + " to compound request");
 			url += "&uuid[]=" + uuid[channel];
 		}
@@ -499,34 +488,36 @@ function updatePlot() {
 				json.data[j].tuples[i][1] = Math.abs(json.data[j].tuples[i][1]);
 
 				// kWh conversion
-				if (mode == "year") {
+				if (range == "year") {
 					// variable month length calculation
 					var d = new Date(json.data[j].tuples[i][0]); // end of month
 					json.data[j].tuples[i][1] *= 24 * daysInMonth(d.getMonth(), d.getFullYear());
 				}
-				else if (mode == "month") {
+				else if (range == "month") {
 					json.data[j].tuples[i][1] *= 24;
 				}
 			}
 
 			// store
-			data[getChannelFromUUID(json.data[j].uuid)] = {data: json.data[j]};
+			data[getChannelFromUUID(json.data[j].uuid)] = {
+				data: json.data[j]
+			};
 		}
 
 		if (consumption) data = stackData(data);
 
 		// sync UI - still desired?
-		if (mode == plotMode) {
+		if (range == plotRange && mode == plotMode) {
 			plot.render(data, consumption);
 		}
 
 		// save after plotting
-		cache.put("consumption." + mode, data, valid);
+		cache.put("vzmon.consumption." + range + "." + mode, data, valid);
 	}).fail(failHandler(url, "updatePlot"))
 }
 
 function updatePerformanceChart(power) {
-	var perf = cache.get("perf");
+	var perf = cache.get("vzmon.perf");
 	console.info("[updatePerformanceChart] " + formatNumber(perf.genToday) + "," + formatNumber(perf.genYesterday) + "," + formatNumber(perf.genMax));
 
 	var data = [{
@@ -580,12 +571,12 @@ function updatePerformanceChart(power) {
 }
 
 function updatePerformance(channel) {
-	var today = currentDate();
+	var today = moment().startOf("day").format(options.dateFormat);
 	var power = channels[channel].power;
 	console.info("[updatePerformance] " + channel + " (" + power + "kWp)");
 
 	// use cache?
-	if (options.cache && cache.get("perf", today)) {
+	if (options.cache && cache.get("vzmon.perf", today)) {
 		updatePerformanceChart(power);
 		return;
 	}
@@ -616,7 +607,11 @@ function updatePerformance(channel) {
 		var genYesterday = (json.data.tuples.length > 0) ? Math.abs(json.data.tuples[json.data.tuples.length-1][1]) * 24 / 1000.0 : 0;
 
 		// save
-		cache.put("perf", { genMax: genMax, genYesterday: genYesterday, genToday: cache.get("perf.genToday") }, today);
+		cache.put("vzmon.perf", { 
+			genMax: genMax, 
+			genYesterday: genYesterday, 
+			genToday: cache.get("vzmon.perf.genToday")
+		}, today);
 
 		updatePerformanceChart(power);
 	}).fail(failHandler(url, "updatePerformance"));
@@ -651,20 +646,21 @@ function initializeChannels(json) {
 
 	// get UUIDs for defined channels
 	for (var channel in channels) {
-		// console.info("Channel " + channel);
+		// console.info("[initializeChannels] channel " + channel);
 		uuid[channel] = getUUID(json, channels[channel].name);
-		console.info("[initializeChannels] UUID " + uuid[channel] + " " + channel);
 
-		if (channels[channel].totalValue !== "undefined") {
-			$("#mainData").append(Mustache.render($("#templateData").html(), {name: channel, title: channels[channel].name}));
+		if (typeof channels[channel].total !== "undefined") {
+			$("#mainData").append(Mustache.render($("#templateData").html(), {
+				name: channel, 
+				title: channels[channel].name
+			}));
 		}
 	}
 
 	// wait until totals are initialized
 	$.when.apply(null, updateTotals()).done(function() {
-		// run initial update
+		// run initial update and repeat 
 		refreshData();
-		// repeat 
 		setInterval(refreshData, (options.updateInterval || 1) * 60 * 1000); // 60s
 	});
 
@@ -672,105 +668,112 @@ function initializeChannels(json) {
 	$("#refresh").click(refreshData);
 }
 
-function setPlotMode(mode) {
-	console.info("[setPlotMode] " + mode);
-	
-	// year -> #plotYear
-	var target = "#plot" + mode.charAt(0).toUpperCase() + mode.slice(1);
-	$("#jPanelMenu-menu li").removeClass("active");
-	$(target).closest("li").addClass("active");
-
+function setPlotRange(range, mode) {
+	console.info("[setPlotRange] " + range +" "+ mode);
+	plotRange = range;
 	plotMode = mode;
-	cache.put("plot.mode", mode);
+	cache.put("vzmon.plot.range", range);
+	cache.put("vzmon.plot.mode", mode);
+}
+
+function selectMenu(el) {
+	console.info("[selectMenu] " + el);
+	var section = $(el).closest("li").attr("section");
+	if (section) {
+		$("#jPanelMenu-menu li[section=\""+section+"\"]").removeClass("active");
+		$(el).closest("li").addClass("active");
+	}
+	return(el);
 }
 
 function createMenu() {
 	jPM = $.jPanelMenu({
 		direction: "right",
-		openPosition: 95,
+		openPosition: 110,
 		before: function() {
 			icons.pause();
 		},
 		after: function() {
-			if (typeof options.animate !== "undefined" && options.animate) icons.play();
+			if (options.animate) icons.play();
 		},
 	});
 	jPM.on();
 	// jPM.open();
-
 	// jPM doesn't remove original menu...
 	$("#menu").remove();
+
+	// defaults
+	setPlotRange(cache.get("vzmon.plot.range") || "day", cache.get("vzmon.plot.mode") || "fixed");
+	selectMenu("#" + plotRange);
+	selectMenu("#" + plotMode);
+	// if (window.navigator.standalone) { // fullscreen mode }
 
 	// handlers
 	$("#jPanelMenu-menu a").click(function() {
 		// make menu target visible
-		var panel = $(this).attr("panel");
+		var panel = $(this).attr("panel") || "#main";
 		$(".panel").hide();
 		$(panel).show();
 
-		if (panel && panel !== "#main") {
-			$("#submenuMain").hide();
-		}
-		else {
-			$("#submenuMain").show();
-			$("#main").show();
-		}
+		selectMenu(this);
 
 		switch ($(this).attr("id")) {
 			case "reset":
-				resetCache();
-				refreshData();
+				cache.put("vzmon", "");
+				refreshData(true);
 				break;
 			case "debug":
 				var msgs = console.getMsgs(true);
 				for (var i=0; i<msgs.length; i++) {
 					var msg = msgs[i];
-					$("ul.console").append($("<li class='" + msg.type + "'><span>" + 
-						formatTime(msg.time) + "</span>" + formatType(msg.value) + "</li>"));
+					$("#consoleContainer").append(Mustache.render($("#templateConsole").html(), {
+						type: msg.type,
+						time: formatTime(msg.time),
+						value: formatType(msg.value),
+					}));
 				}
 				break;
-			case "plotDay":
-			case "plotMonth":
-			case "plotYear":
-				var target = $(this).attr("id").substring(4).toLowerCase();
-				setPlotMode(target);
+			case "day":
+			case "month":
+			case "year":
+				setPlotRange($(this).attr("id"), plotMode);
+				updatePlot();
+				break;
+			case "fixed":
+			case "rolling":
+				setPlotRange(plotRange, $(this).attr("id"));
 				updatePlot();
 				break;
 		}
-
+		
 		jPM.close();
 	});
 }
 
-function resetCache() {
-	cache.put("channels", "");
-	cache.put("totals", "");
-	cache.put("perf", "");
-	cache.put("consumption", "");
-}
-
 function refreshData() {
+	// updateTotals();
 	updateWeather();
 	updatePlot();
 	updateCurrentValues();
 }
 
 function initializeSettings() {
-	setPlotMode(cache.get("plot.mode") || "day");
-
 	var worker = function(json) {
 		initializeChannels(json);
 
 		// listen to resize
 		$(window).bind('orientationchange resize', function(event) {
-			refreshData();
+			// fix calling refresh during requests
+			if (!(NProgress||{}).numCalls) {
+				refreshData();
+			}
 		});
 	}
 
 	// use cache?
 	var hash = getChannelHash(); // get before initializeChannels
 	if (options.cache) {
-		var json = cache.get("channels", hash);
+		var json = cache.get("vzmon.channels", hash);
 		if (json) {
 			worker(json);
 			return;
@@ -781,14 +784,21 @@ function initializeSettings() {
 	var url = vzAPI +"/channel.json?padding=?";
 	$.getJSON(url, function(json) {
 		worker(json);
-		cache.put("channels", json, hash); // use hash from before initializeChannels
+		cache.put("vzmon.channels", json, hash); // use hash from before initializeChannels
 	}).fail(failHandler(url, "init"));
 }
 
 $(document).ready(function() {
+	// console.error(moment("5:00", "HH:mm").format(options.dateTimeFormat));return;
 	// setup
 	icons = new Skycons();
 	plot = new RickshawD3($("#chart")); // instantiate plot library by name - either RickshawD3 or Flot
+	
+	// defaults
+	options.dateFormat = options.dateFormat || "DD.MM.YYYY";
+	options.timeFormat = options.timeFormat || "HH:mm";
+	options.dateTimeFormat = options.dateTimeFormat || "DD.MM.YYYY+HH:mm";
+	options.sunriseTime = options.sunriseTime || "5:00";
 
 	createMenu();
 	createProgressBar();

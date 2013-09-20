@@ -9,7 +9,9 @@
   box-sizing: border-box; }
 html, body {
   margin: 0;
-  height: 100%; /* needed for menu */ }
+  height: 100%; /* needed for menu */ 
+-webkit-overflow-scrolling: touch;
+}
 body {
   font-family: AvenirNextCondensed, "Arial Narrow", sans-serif, Arial, Helvetica;
   font-weight: normal;
@@ -100,17 +102,22 @@ body {
 .jPanelMenu-panel {
   min-height: 100%;
   height: 100%; 
-  padding-top: 4px; /* match .menu-trigger a span top */ }
+  padding-top: 4px; /* match .menu-trigger a span top */
+  /* fix iPhone scroll sluggishness */
+  -webkit-overflow-scrolling: touch; /* https://github.com/acolangelo/jPanelMenu/issues/7 */ }
 
 /* menu navigation */
 nav { background: #232323; color: #cbc4c5; z-index: 1; width: 100%; }
   nav ul { list-style: none; padding: 0; margin: 0; position: relative; font-size: 22px; }
-    nav ul ul { margin: 0 0 0 30px; font-size: 18px; }
     nav li {
-      position: relative; font-weight: 100; border-bottom: solid 1px rgba(0,0,0,0.1); border-top: solid 1px rgba(255,255,255,0.05); }
+      padding: 2px 8px; display: block;
+      border-bottom: solid 1px rgba(0,0,0,0.1); border-top: solid 1px rgba(255,255,255,0.05); }
       nav ul li a, nav ul li a:hover, nav ul li a:visited, nav ul li a:focus { 
-        text-decoration: none; color: #cbc4c5; background-color: transparent; display: block; padding: 4px 12px 4px 12px; }
-    nav li.active { font-weight: bold; }
+        display: block; text-decoration: none; color: #fff; }
+      nav li.section {
+        padding: 2px 8px; font-size: 12px; font-weight: bold; background-color: #000000; }
+      nav li.active {
+        font-weight: bold; background-color: #202020; }
 
 /* console */
 ul.console {
@@ -131,41 +138,38 @@ ul.console {
 /* special objects */
 #weather {
   /*margin-top: 4px;*/ }
-#weather-text, #weather-icon {
-  display: inline-block; }
-  #weather-icon {
-    margin-top: 8px; }
+  #weather-text, #weather-icon {
+    display: inline-block; }
+    #weather-icon {
+      margin-top: 8px; }
 #chart {
   margin-bottom: 10px;
   max-width: 300px;
   height: 200px;
   overflow: hidden; }
+  #chart.rickshaw_graph .x_tick .title {
+    font-family: AvenirNextCondensed, "Arial Narrow", sans-serif, Arial, Helvetica; }
 #perf {
   display: none;
   width: 300px;
-  height: 40px; }
+  height: 40px;
+  margin-bottom: 10px; }
 
 /* page structure */
-.row {
+.row, .panel {
   width: 100%;
   margin: 0px auto;
   max-width: 300px; }
-  .row:before, .row:after, .row .row:before, .row .row:after {
-    content: " ";
-    display: table; }
-  .row:after, .row .row:after {
-    clear: both; }
 .small-2 {
   width: 50%;
   position: relative;
-  /*float: left;*/
   display: inline-block;
   white-space: nowrap; }
   .small-2 + .small-2 {
     text-align: right; }
 
 /* styles */
-h1, h2 > span, h3 > span, #weather-text > div {
+h1, h2 > span, h3 > span {
   font-size: 22px;
   font-weight: normal; 
   color: #444; }

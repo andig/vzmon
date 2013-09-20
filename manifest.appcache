@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# version 39
+# version 46
 
 ./index.php
 ./img/favicon.ico
@@ -33,6 +33,7 @@ CACHE MANIFEST
 ./js/skycons.js
 ./js/nprogress.js
 ./js/jquery.jpanelmenu.min.js
+./js/moment.min.js
 
 ./js/functions.js
 ./js/console.js

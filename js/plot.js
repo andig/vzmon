@@ -23,8 +23,8 @@ function Flot(element) {
 	// Call the parent constructor
 	Plot.call(this, element);
 
-	plotOptions.yaxis.tickFormatter = this.unitFormatter;
-	$.plot(element, [{data:[]}], plotOptions);
+	plot.yaxis.tickFormatter = this.unitFormatter;
+	$.plot(element, [{data:[]}], plot);
 }
 
 Flot.prototype = new Plot();
@@ -41,17 +41,17 @@ Flot.prototype.render = function(data) {
 
 	// use sorted data for building plot series
 	for (var channel in data) {
-		if (typeof channels[channel].plotOptions == 'undefined' || typeof data[channel] == "undefined") continue;
+		if (typeof channels[channel].plot == 'undefined' || typeof data[channel] == "undefined") continue;
 
 		var s = { data: data[channel].data.tuples };
 		// fuse series plot options
-		for (var prop in channels[channel].plotOptions) {
-			s[prop] = channels[channel].plotOptions[prop];
+		for (var prop in channels[channel].plot) {
+			s[prop] = channels[channel].plot[prop];
 		}
 		series.push(s);
 	}
 
-	$.plot($(this.element), series, plotOptions);
+	$.plot($(this.element), series, plot);
 }
 
 
@@ -100,11 +100,11 @@ RickshawD3.prototype.render = function(data, consumption) {
 
 	// in order of data provided
 	for (var channel in data) {
-		// if (typeof channels[channel].plotOptions == 'undefined' || typeof data[channel] == "undefined") continue;
+		// if (typeof channels[channel].plot == 'undefined' || typeof data[channel] == "undefined") continue;
 
-		var stroke = (typeof channels[channel].plotOptions.color == 'undefined') ? null : channels[channel].plotOptions.color;
-		var color = (typeof channels[channel].plotOptions.lines.fillColor == 'undefined' || !channels[channel].plotOptions.lines.fill) ? 'none' : channels[channel].plotOptions.lines.fillColor;
-		var interpolation = (typeof channels[channel].plotOptions.lines.interpolation == 'undefined') ? 'cardinal' : channels[channel].plotOptions.lines.interpolation;
+		var stroke = (typeof channels[channel].plot.color == 'undefined') ? null : channels[channel].plot.color;
+		var color = (typeof channels[channel].plot.lines.fillColor == 'undefined' || !channels[channel].plot.lines.fill) ? 'none' : channels[channel].plot.lines.fillColor;
+		var interpolation = (typeof channels[channel].plot.lines.interpolation == 'undefined') ? 'cardinal' : channels[channel].plot.lines.interpolation;
 
 		series.push({
 			name: channels[channel].name,

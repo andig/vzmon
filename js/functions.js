@@ -77,7 +77,7 @@ function daysInMonth(month, year) {
   return new Date(year, month+1, 0).getDate();
 }
 
-function currentDate(aDate) {
+function formatDate(aDate) {
   var date = (aDate) ? aDate : new Date();
   // return date.toLocaleDateString("de-DE", {timeZone: "UTC", year: "numeric", month: "numeric", day: "numeric"}); 
   var dd = date.getDate();
@@ -172,7 +172,7 @@ var cache = (function() {
         if (validHash && segments.length == 0) {
           obj.hash = validHash; // add hash to leaf node
         }     
-        root[segment] = (segments.length) ? put(segments.join('.'), obj, validHash, root[segment] || {}) : obj;
+        root[segment] = (segments.length) ? this.put(segments.join('.'), obj, validHash, root[segment] || {}) : obj;
         // console.log("[putCache] root("+segment+"): " + JSON.stringify(root));
         return (root);
       }
