@@ -87,39 +87,9 @@ var options = {
 
   //  chart settings
   plot: {
-    series: {
-      curvedLines: {
-        active: true, }
-      },
-    curvedLines: {
-      apply: true,
-      fit: true,
-      fitPointDist: 0.1,
-    },
     xaxis: {
-      mode: 'time',
-      timezone: 'browser',
-      minTickSize: [1, "hour"],
-      timeformat: "%H:%M",
-      },
-    yaxis: {
-      maxTickSize: 1,
-      min: 0,
-      },
-    grid: {
-      backgroundColor: {
-        colors: ['#ffffff', '#ffffff'] },
-      borderWidth: {
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0 }
-      },
-    lines: {
-      show: true,
-      steps: false,
-      lineWidth: 1,
-      fill: false },
+      min: 5 * 3600 * 1000,
+    },
   },
 };
 
