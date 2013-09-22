@@ -3,6 +3,7 @@
  *
  * Monitoring for volkszaehler.org
  */
+
 // Volkszaehler API - path to middleware
 //    ATTENTION: 
 //    make sure this is a publicly accessible URL - test from browser if unsure. 
