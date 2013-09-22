@@ -23,7 +23,48 @@ function Flot(element) {
 	// Call the parent constructor
 	Plot.call(this, element);
 
-	plotOptions.yaxis.tickFormatter = this.unitFormatter;
+	//  chart settings
+	var plotOptions = $.extend(true, {
+		series: {
+			curvedLines: {
+				active: true,
+			}
+		},
+		curvedLines: {
+			apply: true,
+			fit: true,
+			fitPointDist: 0.1,
+		},
+		xaxis: {
+			mode: 'time',
+			timezone: 'browser',
+			minTickSize: [1, "hour"],
+			timeformat: "%H:%M",
+		},
+		yaxis: {
+			tickFormatter: this.unitFormatter,
+			maxTickSize: 1,
+			min: 0,
+		},
+		grid: {
+			backgroundColor: {
+				colors: ['#ffffff', '#ffffff']
+			},
+			borderWidth: {
+				top: 0,
+				right: 0,
+				bottom: 0,
+				left: 0
+			}
+		},
+		lines: {
+			show: true,
+			steps: false,
+			lineWidth: 1,
+			fill: false
+		},
+	}, options.plot);
+
 	$.plot(element, [{data:[]}], plotOptions);
 }
 
