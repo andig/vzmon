@@ -265,7 +265,7 @@ function updateDatabaseStatus() {
  */
 function updateTotals() {
 	var deferred = [];
-    var today = moment().startOf("day").format(options.dateFormat);
+    var today = moment().startOf("day").format(options.formats.date);
 
 	for (var channel in channels) {
 		// channel without defined total
@@ -376,15 +376,15 @@ function updateChannel(channel, json) {
 	}
 
 	$("#" + channel + "Now").html(Mustache.render($("#templateData .templateNow").html(),
-		formatNumber(Math.abs(json.data.tuples[json.data.tuples.length-1][1]), formatCurrent))
+		formatNumber(Math.abs(json.data.tuples[json.data.tuples.length-1][1]), options.numbers.current))
 	);
 	$("#" + channel + "Today").html(Mustache.render($("#templateData .templateToday").html(),
-		formatNumber(Math.abs(json.data.consumption), formatConsumption))
+		formatNumber(Math.abs(json.data.consumption), options.numbers.consumption))
 	);
 
 	// if (totalsInitialized) {
 	$("#" + channel + "Total").html(Mustache.render($("#templateData .templateTotal").html(),
-		formatNumber(Math.abs(channels[channel].total.value || 0) * 1000.0 + Math.abs(json.data.consumption), formatTotals))
+		formatNumber(Math.abs(channels[channel].total.value || 0) * 1000.0 + Math.abs(json.data.consumption), options.numbers.totals))
 	);
 	// }
 
@@ -427,7 +427,7 @@ function updatePlot() {
 	console.info("[updatePlot] " + range);
 
 	var date = new Date();
-	var valid = (range == "day") ? Math.floor(date.getTime()/1000/300) : moment().startOf("day").format(options.dateFormat);
+	var valid = (range == "day") ? Math.floor(date.getTime()/1000/300) : moment().startOf("day").format(options.formats.date);
 	var consumption = range == "year" || range == "month";
 
 	// use cache?
@@ -445,20 +445,20 @@ function updatePlot() {
 		var from = (mode == "fixed") ?
 						moment().startOf('year').subtract('hours', 1) :
 						moment().subtract('years', 1).startOf('month').subtract('hours', 1);
-		dataRange = "from=" + from.format(options.dateFormat) + "&to=today&group=month";
+		dataRange = "from=" + from.format(options.formats.date) + "&to=today&group=month";
 	}
 	else if (range == "month") {
 		var from = (mode == "fixed") ?
 						moment().startOf('month').subtract('hours', 1) :
 						moment().subtract('months', 1).startOf('day').subtract('hours', 1);
 
-		dataRange = "from=" + from.format(options.dateFormat) + "&to=today&group=day"; // January is 0! 
+		dataRange = "from=" + from.format(options.formats.date) + "&to=today&group=day"; // January is 0! 
 	}
 	else {
 		var from = (mode == "fixed") ?
-						moment(options.sunriseTime, options.timeFormat) :
+						moment(options.sunriseTime, options.formats.time) :
 						moment().subtract('hours', 24);
-		dataRange = "from=" + from.format(options.dateTimeFormat) + "&to=now&tuples=" + options.plotTuples;
+		dataRange = "from=" + from.format(options.formats.dateTime) + "&to=now&tuples=" + options.plotTuples;
 	}
 	var url = vzAPI + "/data.json?padding=?&client=raw&" + dataRange;
 
@@ -571,7 +571,7 @@ function updatePerformanceChart(power) {
 }
 
 function updatePerformance(channel) {
-	var today = moment().startOf("day").format(options.dateFormat);
+	var today = moment().startOf("day").format(options.formats.date);
 	var power = channels[channel].power;
 	console.info("[updatePerformance] " + channel + " (" + power + "kWp)");
 
@@ -793,12 +793,6 @@ $(document).ready(function() {
 	// setup
 	icons = new Skycons();
 	plot = new RickshawD3($("#chart")); // instantiate plot library by name - either RickshawD3 or Flot
-	
-	// defaults
-	options.dateFormat = options.dateFormat || "DD.MM.YYYY";
-	options.timeFormat = options.timeFormat || "HH:mm";
-	options.dateTimeFormat = options.dateTimeFormat || "DD.MM.YYYY+HH:mm";
-	options.sunriseTime = options.sunriseTime || "5:00";
 
 	createMenu();
 	createProgressBar();

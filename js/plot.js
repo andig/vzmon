@@ -23,8 +23,8 @@ function Flot(element) {
 	// Call the parent constructor
 	Plot.call(this, element);
 
-	plot.yaxis.tickFormatter = this.unitFormatter;
-	$.plot(element, [{data:[]}], plot);
+	plotOptions.yaxis.tickFormatter = this.unitFormatter;
+	$.plot(element, [{data:[]}], plotOptions);
 }
 
 Flot.prototype = new Plot();
@@ -43,15 +43,14 @@ Flot.prototype.render = function(data) {
 	for (var channel in data) {
 		if (typeof channels[channel].plot == 'undefined' || typeof data[channel] == "undefined") continue;
 
-		var s = { data: data[channel].data.tuples };
-		// fuse series plot options
-		for (var prop in channels[channel].plot) {
-			s[prop] = channels[channel].plot[prop];
-		}
-		series.push(s);
+		var serie = $.extend({
+			data: data[channel].data.tuples
+		}, channels[channel].plot);
+
+		series.push(serie);
 	}
 
-	$.plot($(this.element), series, plot);
+	$.plot($(this.element), series, plotOptions);
 }
 
 
