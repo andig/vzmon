@@ -312,9 +312,8 @@ function updateCurrentValues() {
 
 	var worker = function(json) {
 		for (var i=0; i<json.data.length; i++) {
-			var channel = getChannelFromUUID(json.data[i].uuid);
 // TODO
-channel = mapObj(channels, 'uuid', json.data[i].uuid)
+			var channel = getChannelFromUUID(json.data[i].uuid);
 			updateChannel(channel, {
 				data: json.data[i]
 			});
@@ -631,12 +630,6 @@ function createProgressBar() {
 	}
 }
 
-function mapObject(obj, key, val) {
-	return(jQuery.map(obj, function(property) {
-		return (property[key] == val) ? property : null;
-	})[0])
-}
-
 function initializeChannels(json) {
 	console.debug("[initializeChannels] " + JSON.stringify(json));
 
@@ -646,7 +639,7 @@ function initializeChannels(json) {
 		// TODO fix need for uuid array
 		// channels[channel].uuid = getUUID(json, channels[channel].name);
 		uuid[channel] = getUUID(json, channels[channel].name);
-		channels[channel].uuid = mapObject(json.channels, 'title', channels[channel].name).uuid;
+		channels[channel].uuid = filterProperties(json.channels, 'title', channels[channel].name).uuid;
 
 		if (typeof channels[channel].total !== "undefined") {
 			$('#data .template').clone().appendTo('#data').attr('id', 'channel-' + channel).removeClass('template');

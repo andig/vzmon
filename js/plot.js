@@ -65,6 +65,8 @@ function Flot(element) {
 		},
 	}, options.plot);
 
+	plotOptions.yaxis.tickFormatter = this.unitFormatter;
+
 	$.plot(element, [{data:[]}], plotOptions);
 }
 

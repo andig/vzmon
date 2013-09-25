@@ -115,6 +115,16 @@ function failHandler(url, context) {
 }
 
 /**
+ * Universal object filtering
+ * Returns object property where  child property 'key' matches given 'val'
+ */
+function filterProperties(obj, key, val) {
+  return(jQuery.map(obj, function(property) {
+    return (property[key] == val) ? property : null;
+  })[0])
+}
+
+/**
  * Get UUID for channel with given title
  */
 function getUUID(json, title) {
