@@ -41,12 +41,8 @@
 	<link rel="stylesheet" href="css/vzmon.css" type="text/css" />
 
 	<!-- js -->
-<!--
-    <script type="text/javascript" src="../videodb/javascript/jquery/jquery-1.9.0.min.js"></script>
--->
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.js"></script>
 
-	<script type="text/javascript" src="js/mustache.js"></script>
 	<script type="text/javascript" src="js/skycons.js"></script>
 	<script type="text/javascript" src="js/moment.min.js"></script>
 
@@ -88,7 +84,7 @@
 			nav ul {
 				font-size: 18px; }
 
-			h1, h2 > span, h3 > span {
+			h1, h2 > span:not(.value), h3 > span:not(.value) {
 				font-size: 18px !important; }
 			h2 {
 				font-size: 58px !important; 
@@ -120,15 +116,13 @@
 			<li class="section">Plant</li>
 			<li class="active" section="plant"><a href="#">Default</a></li>
 			
-<!-- <li><ul> -->
 			<li class="section">Range</li>
-			<li class="active" section="range"><a href="#" id="day">Day</a></li>
+			<li section="range" class="active"><a href="#" id="day">Day</a></li>
 			<li section="range"><a href="#" id="month">Month</a></li>
 			<li section="range"><a href="#" id="year">Year</a></li>
-<!-- </ul></li> -->
 			
 			<li class="section">Mode</li>
-			<li class="active" section="mode"><a href="#" id="fixed">Fixed</a></li>
+			<li section="mode" class="active"><a href="#" id="fixed">Fixed</a></li>
 			<li section="mode"><a href="#" id="rolling">Rolling</a></li>
 			
 			<li class="section">Functions</li>
@@ -139,34 +133,13 @@
 	</nav>
 
 	<!-- 
-		Templates (hidden)
-	-->
-	<div class="hidden">
-		<div id="templateWeather">
-			<h2 class="small-2">{{currently.temperature}}<span>° {{currently.summary}}</span></h2>
-		</div>
-		<div id="templateData">
-			<div id="{{name}}" class="hidden">
-				<h1>{{title}}</h1>
-				<h2 id="{{name}}Now" class="small-2 templateNow">{{value}}<span>{{unit}}</span></h2><div class="small-2">
-			 		<h3 id="{{name}}Today" class="templateToday">{{value}}<span>{{unit}} today</span></h3>
-			 	 	<h3 id="{{name}}Total" class="templateTotal">{{value}}<span>{{unit}} total</span></h3>
-				</div>
-			</div>
-		</div>
-		<ul id="templateConsole">
-			<li class="{{type}}"><span>{{time}}</span>{{value}}</li>
-		</ul>
-	</div>
-
-	<!-- 
 		Panels
 	-->
 	<div id="main" class="panel">
 		<div class="large-2">
 			<div id="weather" class="hidden">
 			    <canvas id="weather-icon" width="54" height="54"></canvas>
-				<div id="weather-text"></div>
+				<h2 class="small-2"><span class="value"></span><span>° </span><span class="summary"></span></h2>
 			</div>
 
 			<div id="chart"></div>
@@ -174,7 +147,15 @@
 			<div id="perf"></div>
 		</div>
 
-		<div id="mainData" class="large-2"></div>
+		<div id="data" class="large-2">
+			<div class="template hidden">
+				<h1 class="title">{{title}}</h1>
+				<h2 class="small-2 now"><span class="value">{{value}}</span><span class="unit">{{unit}}</span></h2><div class="small-2">
+					<h3 class="today"><span class="value">{{value}}</span><span class="unit">{{unit}}</span><span> today</span></h3>
+					<h3 class="total"><span class="value">{{value}}</span><span class="unit">{{unit}}</span><span> total</span></h3>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<div id="database" class="panel hidden">
@@ -185,7 +166,9 @@
 
 	<div id="console" class="panel hidden">
 		<h1>Console</h1>
-		<ul id="consoleContainer" class="console"></ul>
+		<ul class="console">
+			<li class="template hidden"><span class="time">{{time}}</span><span class="value">{{value}}</span></li>
+		</ul>
 	</div>
 
 <script type="text/javascript">
@@ -203,14 +186,14 @@ var refresh = false;
  * Get local weather and show
  */
 function updateWeather() {
-	console.info('[updateWeather]');
+	console.debug('[updateWeather]');
 
 	// do the hard lifting
 	var worker = function(json) {
 		json.currently.temperature = Math.round(json.currently.temperature);
 
 		if (typeof json.daily.data[0] !== "undefined") {
-			console.info("[updateWeather] sunrise/sunset: " + 
+			console.debug("[updateWeather] sunrise/sunset: " + 
 				currentTime(new Date(json.daily.data[0].sunriseTime * 1000)) +"/"+ 
 				currentTime(new Date(json.daily.data[0].sunsetTime * 1000)));
 
@@ -222,8 +205,9 @@ function updateWeather() {
 			options.plot.xaxis.max = Math.ceil(json.daily.data[0].sunsetTime / 3600) * 3600 * 1000;
 		}
 
-		$("#weather-text").html(Mustache.render($("#templateWeather").html(), json));
-		$("#weather").show();
+		$("#weather .value").html(json.currently.temperature);
+		$("#weather .summary").html(json.currently.summary);
+		$("#weather").removeClass('hidden');
 
 		icons.set($("#weather-icon").get(0), mapWeatherIcon(json.currently.icon));
 		if (options.animate) icons.play();
@@ -239,6 +223,12 @@ function updateWeather() {
 		}
 	}
 
+	// sanity check
+	if (typeof weatherAPI == "undefined") {
+		console.debug('[updateWeather] API not defined');
+		return;
+	}
+
 	var url = weatherAPI + "&callback=?";
 	$.getJSON(url, function(json) {
 		worker(json);
@@ -252,7 +242,7 @@ function updateWeather() {
 function updateDatabaseStatus() {
 	var url = vzAPI + "/capabilities/database.json?padding=?";
 	$.getJSON(url, function(json) {
-		console.log("[updateDatabaseStatus]" + json.capabilities.database);
+		console.debug("[updateDatabaseStatus]" + json.capabilities.database);
 		$("#database").html(Mustache.render($("#templateDatebase").html(), {
 			dbrows: formatNumber(json.capabilities.database.rows / 1000, {decimals:0, si:false}),
 			dbsize: formatNumber(json.capabilities.database.size / 1024 / 1024, {decimals:1, si:false})
@@ -273,7 +263,7 @@ function updateTotals() {
 
 		var totalStorage = (options.cache) ? cache.get("vzmon.totals." + channel) : false;
 		if (totalStorage) {
-			console.info("[updateTotals] " + channel +" "+ channels[channel].total.atDate +":"+ channels[channel].total.value
+			console.debug("[updateTotals] " + channel +" "+ channels[channel].total.atDate +":"+ channels[channel].total.value
 													 +" "+ totalStorage.atDate +":"+ totalStorage.value);
 			channels[channel].total.value = totalStorage.value;
 			channels[channel].total.atDate = totalStorage.atDate;
@@ -284,7 +274,7 @@ function updateTotals() {
 
 		// do a delta update of the totals
 		var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=" + channels[channel].total.atDate + "&to=today&tuples=1";
-		console.info("[updateTotals] " + url);
+		console.debug("[updateTotals] " + url);
 		deferred.push(
 			$.getJSON(url,
 				$.proxy(function(json) {
@@ -301,14 +291,14 @@ function updateTotals() {
 	 					value: totalValue,
 	 					atDate: this.today,
 	 				});
-					console.info("[updateTotals] " + this.channel + " " + JSON.stringify(cache.get("vzmon.totals." + this.channel)));
+					console.debug("[updateTotals] " + this.channel + " " + JSON.stringify(cache.get("vzmon.totals." + this.channel)));
 	 			}, {channel: channel, today: today})
 	 		).fail(failHandler(url, "updateTotals"))
 	 	)
 	}
 
 	$.when.apply(null, deferred).done(function() {
-		console.info("[updateTotals] done");
+		console.debug("[updateTotals] done");
 	});
 
 	return(deferred);
@@ -318,11 +308,13 @@ function updateTotals() {
  * Get todays channel values and show
  */
 function updateCurrentValues() {
-	console.info("[updateCurrentValues]");
+	console.debug("[updateCurrentValues]");
 
 	var worker = function(json) {
 		for (var i=0; i<json.data.length; i++) {
 			var channel = getChannelFromUUID(json.data[i].uuid);
+// TODO
+channel = mapObj(channels, 'uuid', json.data[i].uuid)
 			updateChannel(channel, {
 				data: json.data[i]
 			});
@@ -339,10 +331,9 @@ function updateCurrentValues() {
 		}
 	}
 
-	// get data
+	// get data if the channel us used
 	var url = vzAPI + "/data.json?padding=?&client=raw&from=today&to=now";
 	for (var channel in channels) {
-		// is the channel used at all?
 		if (typeof channels[channel].total !== "undefined") {
 			url += "&uuid[]=" + uuid[channel];
 		}
@@ -358,7 +349,7 @@ function updateCurrentValues() {
  * Show single channel values
  */
 function updateChannel(channel, json) {
-	console.info("[updateChannel] " + channel);
+	console.debug("[updateChannel] " + channel);
 
 	if (typeof json.data.tuples == "undefined") {
 		console.error("[updateChannel] No current data.tuples for channel " + channel);
@@ -375,24 +366,23 @@ function updateChannel(channel, json) {
 		updatePerformance(channel);
 	}
 
-	$("#" + channel + "Now").html(Mustache.render($("#templateData .templateNow").html(),
-		formatNumber(Math.abs(json.data.tuples[json.data.tuples.length-1][1]), options.numbers.current))
-	);
-	$("#" + channel + "Today").html(Mustache.render($("#templateData .templateToday").html(),
-		formatNumber(Math.abs(json.data.consumption), options.numbers.consumption))
-	);
+	var n = formatNumber(Math.abs(json.data.tuples[json.data.tuples.length-1][1]), options.numbers.current);
+	$("#channel-" + channel + " .now .value").html(n.value);
+	$("#channel-" + channel + " .now .unit").html(n.unit);
 
-	// if (totalsInitialized) {
-	$("#" + channel + "Total").html(Mustache.render($("#templateData .templateTotal").html(),
-		formatNumber(Math.abs(channels[channel].total.value || 0) * 1000.0 + Math.abs(json.data.consumption), options.numbers.totals))
-	);
-	// }
+	var n = formatNumber(Math.abs(json.data.consumption), options.numbers.consumption);
+	$("#channel-" + channel + " .today .value").html(n.value);
+	$("#channel-" + channel + " .today .unit").html(n.unit);
 
-	$("#" + channel).show();
+	var n = formatNumber(Math.abs(channels[channel].total.value || 0) * 1000.0 + Math.abs(json.data.consumption), options.numbers.totals);
+	$("#channel-" + channel + " .total .value").html(n.value);
+	$("#channel-" + channel + " .total .unit").html(n.unit);
+
+	$("#channel-" + channel).removeClass('hidden');
 }
 
 function stackData(data) {
-	console.info("[stackData]"); // + JSON.stringify(data));
+	console.debug("[stackData]"); // + JSON.stringify(data));
 
 	var channels = [];
 	for (var channel in data) {
@@ -424,7 +414,7 @@ function stackData(data) {
 function updatePlot() {
 	var range = plotRange; // local copy
 	var mode = plotMode; // local copy
-	console.info("[updatePlot] " + range);
+	console.debug("[updatePlot] " + range);
 
 	var date = new Date();
 	var valid = (range == "day") ? Math.floor(date.getTime()/1000/300) : moment().startOf("day").format(options.formats.date);
@@ -466,14 +456,14 @@ function updatePlot() {
 	for (var channel in channels) {
 		// only if channel is to be plotted
 		if (typeof channels[channel].plot !== "undefined") {
-			console.info("[updatePlot] adding " + channel + " to compound request");
+			console.debug("[updatePlot] adding " + channel + " to compound request");
 			url += "&uuid[]=" + uuid[channel];
 		}
 	}
 
 	// add all data to plot series
 	$.getJSON(url, function(json) {
-		console.info("[updatePlot] got compound request");
+		console.debug("[updatePlot] got compound request");
 
 		var data = {};
 		for (var j=0; j<json.data.length; j++) {
@@ -499,6 +489,7 @@ function updatePlot() {
 			}
 
 			// store
+			// TODO
 			data[getChannelFromUUID(json.data[j].uuid)] = {
 				data: json.data[j]
 			};
@@ -518,7 +509,7 @@ function updatePlot() {
 
 function updatePerformanceChart(power) {
 	var perf = cache.get("vzmon.perf");
-	console.info("[updatePerformanceChart] " + formatNumber(perf.genToday) + "," + formatNumber(perf.genYesterday) + "," + formatNumber(perf.genMax));
+	console.debug("[updatePerformanceChart] " + formatNumber(perf.genToday) + "," + formatNumber(perf.genYesterday) + "," + formatNumber(perf.genMax));
 
 	var data = [{
 		"title": "Ratio",
@@ -573,7 +564,7 @@ function updatePerformanceChart(power) {
 function updatePerformance(channel) {
 	var today = moment().startOf("day").format(options.formats.date);
 	var power = channels[channel].power;
-	console.info("[updatePerformance] " + channel + " (" + power + "kWp)");
+	console.debug("[updatePerformance] " + channel + " (" + power + "kWp)");
 
 	// use cache?
 	if (options.cache && cache.get("vzmon.perf", today)) {
@@ -592,7 +583,7 @@ function updatePerformance(channel) {
 			console.error("[updatePerformance] No current data.consumption for channel " + channel);
 			return;
 		}
-		console.info("[updatePerformance] got daily data (" + json.data.tuples.length + " days)");
+		console.debug("[updatePerformance] got daily data (" + json.data.tuples.length + " days)");
 
 		// remove current day remainder
 		json.data.tuples.pop(); 
@@ -622,7 +613,6 @@ function createProgressBar() {
 		NProgress.numCalls = NProgress.completedCalls = 0;
 		NProgress.advance = function() {
 			NProgress.completedCalls++;
-			// console.log(NProgress.status +" "+ NProgress.completedCalls +"/"+ NProgress.numCalls)
 			NProgress.set(Math.max(NProgress.status, NProgress.completedCalls / NProgress.numCalls));
 			if (NProgress.numCalls == NProgress.completedCalls) {
 				NProgress.numCalls = NProgress.completedCalls = 0;
@@ -641,19 +631,27 @@ function createProgressBar() {
 	}
 }
 
+function mapObject(obj, key, val) {
+	return(jQuery.map(obj, function(property) {
+		return (property[key] == val) ? property : null;
+	})[0])
+}
+
 function initializeChannels(json) {
-	console.info("[initializeChannels] " + JSON.stringify(json));
+	console.debug("[initializeChannels] " + JSON.stringify(json));
 
 	// get UUIDs for defined channels
 	for (var channel in channels) {
-		// console.info("[initializeChannels] channel " + channel);
+		// console.debug("[initializeChannels] channel " + channel);
+		// TODO fix need for uuid array
+		// channels[channel].uuid = getUUID(json, channels[channel].name);
 		uuid[channel] = getUUID(json, channels[channel].name);
+		channels[channel].uuid = mapObject(json.channels, 'title', channels[channel].name).uuid;
 
 		if (typeof channels[channel].total !== "undefined") {
-			$("#mainData").append(Mustache.render($("#templateData").html(), {
-				name: channel, 
-				title: channels[channel].name
-			}));
+			$('#data .template').clone().appendTo('#data').attr('id', 'channel-' + channel).removeClass('template');
+			$('#channel-' + channel + ' .name').html(channel);
+			$('#channel-' + channel + ' .title').html(channels[channel].name);
 		}
 	}
 
@@ -669,7 +667,7 @@ function initializeChannels(json) {
 }
 
 function setPlotRange(range, mode) {
-	console.info("[setPlotRange] " + range +" "+ mode);
+	console.debug("[setPlotRange] " + range +" "+ mode);
 	plotRange = range;
 	plotMode = mode;
 	cache.put("vzmon.plot.range", range);
@@ -677,7 +675,7 @@ function setPlotRange(range, mode) {
 }
 
 function selectMenu(el) {
-	console.info("[selectMenu] " + el);
+	console.debug("[selectMenu] " + el);
 	var section = $(el).closest("li").attr("section");
 	if (section) {
 		$("#jPanelMenu-menu li[section=\""+section+"\"]").removeClass("active");
@@ -726,11 +724,10 @@ function createMenu() {
 				var msgs = console.getMsgs(true);
 				for (var i=0; i<msgs.length; i++) {
 					var msg = msgs[i];
-					$("#consoleContainer").append(Mustache.render($("#templateConsole").html(), {
-						type: msg.type,
-						time: formatTime(msg.time),
-						value: formatType(msg.value),
-					}));
+					$('#console .template').clone().appendTo('#console ul').addClass(msg.type + " msg");
+					$('#console .msg .time').html(formatTime(msg.time));
+					$('#console .msg .value').html(formatType(msg.value));
+					$('#console .msg').removeClass('template hidden msg');
 				}
 				break;
 			case "day":
@@ -786,6 +783,22 @@ function initializeSettings() {
 		worker(json);
 		cache.put("vzmon.channels", json, hash); // use hash from before initializeChannels
 	}).fail(failHandler(url, "init"));
+}
+
+function vzFetch(key, worker, deferred, hash) {
+	var json = cache.get(key, hash);
+
+	if (json) {
+		// console.log("-- vzFetch cached -- ");
+		worker(json);
+		return;
+	}
+
+	deferred.done(function(json) {
+		// console.log("-- deferred -- " + key + " " + JSON.stringify(json));
+		cache.put(key, json, hash);
+		worker(json);
+	});
 }
 
 $(document).ready(function() {

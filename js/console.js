@@ -5,6 +5,11 @@
 		msgs.push({	type: "log", value: msg, time: new Date().getTime() });
 		proxyLog.apply(this, arguments);
 	}
+	var proxyDebug = console.debug;
+	console.debug = function(msg) {
+		msgs.push({	type: "debug", value: msg, time: new Date().getTime() });
+		proxyDebug.apply(this, arguments);
+	}
 	var proxyInfo = console.info;
 	console.info = function(msg) {
 		msgs.push({	type: "info", value: msg, time: new Date().getTime() });

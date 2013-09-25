@@ -169,7 +169,7 @@ ul.console {
     text-align: right; }
 
 /* styles */
-h1, h2 > span, h3 > span {
+h1, h2 > span:not(.value), h3 > span:not(.value) {
   font-size: 22px;
   font-weight: normal; 
   color: #444; }
