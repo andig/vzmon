@@ -9,9 +9,9 @@
 	<meta content="utf-8" http-equiv="encoding">
 <?php if ($browser == 'iphone') { ?>
 	<!-- iPhone settings -->
-	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" />
 	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
 
 	<link rel="apple-touch-icon" sizes="57x57" href="img/home-57.png" />
 	<link rel="apple-touch-icon" sizes="72x72" href="img/home-72.png" />
@@ -56,8 +56,12 @@
 
 	<!-- plotting -->
 	<script type="text/javascript" src="js/plot.js"></script>
+<!--
 	<script type="text/javascript" src="js/rickshaw/d3.v2.min.js"></script>
 	<script type="text/javascript" src="js/rickshaw/rickshaw.min.js"></script>
+-->
+	<script type="text/javascript" src="js/rickshaw/d3.v2.js"></script>
+	<script type="text/javascript" src="js/rickshaw/rickshaw.js"></script>
 	<script type="text/javascript" src="js/rickshaw/bullet.js"></script>
 	
 	<link rel="stylesheet" href="css/rickshaw.min.css" type="text/css" />
@@ -152,7 +156,7 @@
 				<h1 class="title">{{title}}</h1>
 				<h2 class="small-2 now"><span class="value">{{value}}</span><span class="unit">{{unit}}</span></h2><div class="small-2">
 					<h3 class="today"><span class="value">{{value}}</span><span class="unit">{{unit}}</span><span> today</span></h3>
-					<h3 class="total"><span class="value">{{value}}</span><span class="unit">{{unit}}</span><span> total</span></h3>
+					<h3 class="total hidden"><span class="value">{{value}}</span><span class="unit">{{unit}}</span><span> total</span></h3>
 				</div>
 			</div>
 		</div>
@@ -177,7 +181,6 @@ var icons;			// forecast.io weather icons
 var plot;			// chart abstraction
 var jPM;			// menu
 
-var uuid = {};		// UUIDs
 var plotRange = "day";
 var plotMode = "fixed";
 var refresh = false;
@@ -213,27 +216,17 @@ function updateWeather() {
 		if (options.animate) icons.play();
 	}
 
-	// use cache?
-	var valid = Math.floor(new Date().getTime()/1000/300); // 5min
-	if (options.cache) {
-		var json = cache.get("vzmon.weather", valid);
-		if (json) {
-			worker(json);
-			return;
-		}
-	}
-
 	// sanity check
 	if (typeof weatherAPI == "undefined") {
 		console.debug('[updateWeather] API not defined');
 		return;
 	}
 
+	var hash = Math.floor(new Date().getTime()/1000/300); // 5min
 	var url = weatherAPI + "&callback=?";
-	$.getJSON(url, function(json) {
-		worker(json);
-		cache.put("vzmon.weather", json, valid);
-	}).fail(failHandler(url, "updateWeather"));
+	fetchCached("vzmon.weather", worker, function() {
+		return $.getJSON(url).fail(failHandler(url, "updateWeather"));
+	}, hash);
 }
 
 /**
@@ -273,7 +266,7 @@ function updateTotals() {
 		if (channels[channel].total.atDate == today) continue;
 
 		// do a delta update of the totals
-		var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=" + channels[channel].total.atDate + "&to=today&tuples=1";
+		var url = vzAPI + "/data/" + channels[channel].uuid + ".json?padding=?&client=raw&from=" + channels[channel].total.atDate + "&to=today&tuples=1";
 		console.debug("[updateTotals] " + url);
 		deferred.push(
 			$.getJSON(url,
@@ -298,10 +291,14 @@ function updateTotals() {
 	}
 
 	$.when.apply(null, deferred).done(function() {
-		console.debug("[updateTotals] done");
+		// wait until totals are initialized
+		for (var channel in channels) {
+			// add totals UI
+			if (typeof channels[channel].total !== "undefined") {
+				$('#channel-' + channel + ' .total').show();
+			}
+		}
 	});
-
-	return(deferred);
 }
 
 /**
@@ -312,7 +309,6 @@ function updateCurrentValues() {
 
 	var worker = function(json) {
 		for (var i=0; i<json.data.length; i++) {
-// TODO
 			var channel = getChannelFromUUID(json.data[i].uuid);
 			updateChannel(channel, {
 				data: json.data[i]
@@ -321,27 +317,17 @@ function updateCurrentValues() {
 	}
 
 	// use cache?
-	var valid = Math.floor(new Date().getTime() / (1000 * (options.updateInterval||1) * 60)); // 1min
-	if (options.cache) {
-		var json = cache.get("vzmon.current", valid);
-		if (json) {
-			worker(json);
-			return;
-		}
-	}
-
+	var hash = Math.floor(new Date().getTime() / (1000 * (options.updateInterval||1) * 60)); // 1min
 	// get data if the channel us used
 	var url = vzAPI + "/data.json?padding=?&client=raw&from=today&to=now";
 	for (var channel in channels) {
 		if (typeof channels[channel].total !== "undefined") {
-			url += "&uuid[]=" + uuid[channel];
+			url += "&uuid[]=" + channels[channel].uuid;
 		}
 	}
-
-	$.getJSON(url, function(json) {
-		worker(json);
-		cache.put("vzmon.current", json, valid);
-	}).fail(failHandler(url, "updateCurrentValues"));
+	fetchCached("vzmon.current", worker, function() {
+		return $.getJSON(url).fail(failHandler(url, "updateCurrentValues"));
+	}, hash);
 }
 
 /**
@@ -377,7 +363,7 @@ function updateChannel(channel, json) {
 	$("#channel-" + channel + " .total .value").html(n.value);
 	$("#channel-" + channel + " .total .unit").html(n.unit);
 
-	$("#channel-" + channel).removeClass('hidden');
+	$("#channel-" + channel).show();
 }
 
 function stackData(data) {
@@ -434,14 +420,14 @@ function updatePlot() {
 		var from = (mode == "fixed") ?
 						moment().startOf('year').subtract('hours', 1) :
 						moment().subtract('years', 1).startOf('month').subtract('hours', 1);
-		dataRange = "from=" + from.format(options.formats.date) + "&to=today&group=month";
+		dataRange = "from=" + from.format(options.formats.date) + "&to=now&group=month";
 	}
 	else if (range == "month") {
 		var from = (mode == "fixed") ?
 						moment().startOf('month').subtract('hours', 1) :
 						moment().subtract('months', 1).startOf('day').subtract('hours', 1);
 
-		dataRange = "from=" + from.format(options.formats.date) + "&to=today&group=day"; // January is 0! 
+		dataRange = "from=" + from.format(options.formats.date) + "&to=now&group=day"; // January is 0! 
 	}
 	else {
 		var from = (mode == "fixed") ?
@@ -456,7 +442,7 @@ function updatePlot() {
 		// only if channel is to be plotted
 		if (typeof channels[channel].plot !== "undefined") {
 			console.debug("[updatePlot] adding " + channel + " to compound request");
-			url += "&uuid[]=" + uuid[channel];
+			url += "&uuid[]=" + channels[channel].uuid;
 		}
 	}
 
@@ -472,29 +458,29 @@ function updatePlot() {
 			}
 
 			// convert result
-			json.data[j].tuples.shift();
+			// TODO check if shifting needed (1st day of month?!)
+			// json.data[j].tuples.shift();
 			for (var i=0; i<json.data[j].tuples.length; i++) {
 				json.data[j].tuples[i][1] = Math.abs(json.data[j].tuples[i][1]);
 
 				// kWh conversion
 				if (range == "year") {
-					// variable month length calculation
-					var d = new Date(json.data[j].tuples[i][0]); // end of month
-					json.data[j].tuples[i][1] *= 24 * daysInMonth(d.getMonth(), d.getFullYear());
+					json.data[j].tuples[i][1] *= 24 * moment(json.data[j].tuples[i][0]).daysInMonth();
 				}
 				else if (range == "month") {
 					json.data[j].tuples[i][1] *= 24;
 				}
+
+				// console.log(json.data[j].uuid +" "+ moment(json.data[j].tuples[i][0]).format("dddd, DD.MM.YY, hh:mm:ss"));
 			}
 
 			// store
-			// TODO
 			data[getChannelFromUUID(json.data[j].uuid)] = {
 				data: json.data[j]
 			};
 		}
 
-		if (consumption) data = stackData(data);
+		// if (consumption) data = stackData(data);
 
 		// sync UI - still desired?
 		if (range == plotRange && mode == plotMode) {
@@ -571,8 +557,8 @@ function updatePerformance(channel) {
 		return;
 	}
 	
-    var from = "1.1." + new Date().getFullYear();
-	var url = vzAPI + "/data/" + uuid[channel] + ".json?padding=?&client=raw&from=" + from + "&to=today&group=day";
+	var from = "1.1." + new Date().getFullYear();
+	var url = vzAPI + "/data/" + channels[channel].uuid + ".json?padding=?&client=raw&from=" + from + "&to=today&group=day";
 	$.getJSON(url, function(json) {
 		if (typeof json.data.tuples == "undefined") {
 			console.error("[updatePerformance] No current data.tuples for channel " + channel);
@@ -630,35 +616,6 @@ function createProgressBar() {
 	}
 }
 
-function initializeChannels(json) {
-	console.debug("[initializeChannels] " + JSON.stringify(json));
-
-	// get UUIDs for defined channels
-	for (var channel in channels) {
-		// console.debug("[initializeChannels] channel " + channel);
-		// TODO fix need for uuid array
-		// channels[channel].uuid = getUUID(json, channels[channel].name);
-		uuid[channel] = getUUID(json, channels[channel].name);
-		channels[channel].uuid = filterProperties(json.channels, 'title', channels[channel].name).uuid;
-
-		if (typeof channels[channel].total !== "undefined") {
-			$('#data .template').clone().appendTo('#data').attr('id', 'channel-' + channel).removeClass('template');
-			$('#channel-' + channel + ' .name').html(channel);
-			$('#channel-' + channel + ' .title').html(channels[channel].name);
-		}
-	}
-
-	// wait until totals are initialized
-	$.when.apply(null, updateTotals()).done(function() {
-		// run initial update and repeat 
-		refreshData();
-		setInterval(refreshData, (options.updateInterval || 1) * 60 * 1000); // 60s
-	});
-
-	// assign to button
-	$("#refresh").click(refreshData);
-}
-
 function setPlotRange(range, mode) {
 	console.debug("[setPlotRange] " + range +" "+ mode);
 	plotRange = range;
@@ -667,8 +624,15 @@ function setPlotRange(range, mode) {
 	cache.put("vzmon.plot.mode", mode);
 }
 
+function refreshData() {
+	// updateTotals();
+	updateCurrentValues();
+	updateWeather();
+	updatePlot();
+}
+
 function selectMenu(el) {
-	console.debug("[selectMenu] " + el);
+	console.debug("[selectMenu] " + $(el).attr("id"));
 	var section = $(el).closest("li").attr("section");
 	if (section) {
 		$("#jPanelMenu-menu li[section=\""+section+"\"]").removeClass("active");
@@ -740,65 +704,80 @@ function createMenu() {
 	});
 }
 
-function refreshData() {
-	// updateTotals();
-	updateWeather();
-	updatePlot();
-	updateCurrentValues();
-}
-
 function initializeSettings() {
 	var worker = function(json) {
-		initializeChannels(json);
+		console.debug("[initializeChannels] " + JSON.stringify(json));
+
+		// get UUIDs for defined channels
+		for (var channel in channels) {
+			// console.debug("[initializeChannels] channel " + channel);
+			channels[channel].uuid = filterProperties(json.channels, 'title', channels[channel].name).uuid;
+
+			// add channel UI
+			if (typeof channels[channel].total !== "undefined") {
+				$('#data .template').clone().appendTo('#data').attr('id', 'channel-' + channel).removeClass('template');
+				$('#channel-' + channel + ' .name').html(channel);
+				$('#channel-' + channel + ' .title').html(channels[channel].name);
+			}
+		}
+
+		// run update
+		refreshData();
+		setInterval(refreshData, (options.updateInterval || 1) * 60 * 1000); // 60s
+		updateTotals();
+
+		// assign to button
+		$("#refresh").click(refreshData);
 
 		// listen to resize
 		$(window).bind('orientationchange resize', function(event) {
-			// fix calling refresh during requests
+		    if (this.resizeTimeOut) clearTimeout(this.resizeTimeOut);
+		    this.resizeTimeOut = setTimeout(function() {
+		        $(this).trigger('resizeEnd');
+		    }, 250);
+		});
+
+		$(window).bind('resizeEnd', function() {
+			// resize finished - fix calling refresh during requests
 			if (!(NProgress||{}).numCalls) {
 				refreshData();
 			}
 		});
 	}
 
-	// use cache?
 	var hash = getChannelHash(); // get before initializeChannels
-	if (options.cache) {
-		var json = cache.get("vzmon.channels", hash);
-		if (json) {
-			worker(json);
-			return;
-		}
-	}
-
-	// fallback to default initialization by reading channel meta data
 	var url = vzAPI +"/channel.json?padding=?";
-	$.getJSON(url, function(json) {
-		worker(json);
-		cache.put("vzmon.channels", json, hash); // use hash from before initializeChannels
-	}).fail(failHandler(url, "init"));
+	fetchCached("vzmon.channels", worker, function() {
+		return $.getJSON(url).fail(failHandler(url, "initializeSettings"));
+	}, hash);
 }
 
-function vzFetch(key, worker, deferred, hash) {
+/**
+ * Cache-aware fetching of network ressources
+ *
+ * @param key		cache key
+ * @param worker	function to call after successful data retrieval
+ * @param deferred	function to call when cached data unavailable
+ * @param hash		hash to determine cached data validity
+ */
+function fetchCached(key, worker, deferred, hash) {
 	var json = cache.get(key, hash);
 
 	if (json) {
-		// console.log("-- vzFetch cached -- ");
 		worker(json);
 		return;
 	}
 
-	deferred.done(function(json) {
-		// console.log("-- deferred -- " + key + " " + JSON.stringify(json));
+	deferred().done(function(json) {
 		cache.put(key, json, hash);
 		worker(json);
 	});
 }
 
 $(document).ready(function() {
-	// console.error(moment("5:00", "HH:mm").format(options.dateTimeFormat));return;
 	// setup
 	icons = new Skycons();
-	plot = new RickshawD3($("#chart")); // instantiate plot library by name - either RickshawD3 or Flot
+	plot = new RickshawD3($("#chart")); // instantiate plot library by name - either RickshawD3 or Flot (currently only RickshawD3)
 
 	createMenu();
 	createProgressBar();

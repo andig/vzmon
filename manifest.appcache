@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# version 47
+# version 53
 
 ./index.php
 ./img/favicon.ico
@@ -21,15 +21,16 @@ CACHE MANIFEST
 
 # scripts
 
-./js/rickshaw/rickshaw.min.js
-./js/rickshaw/d3.v2.min.js
+./js/rickshaw/rickshaw.js
+./js/rickshaw/d3.v2.js
+#./js/rickshaw/rickshaw.min.js
+#./js/rickshaw/d3.v2.min.js
 ./js/rickshaw/bullet.js
 
-./js/flot/jquery.flot.js
-./js/flot/jquery.flot.time.js
-./js/flot/curvedLines.js
+#./js/flot/jquery.flot.js
+#./js/flot/jquery.flot.time.js
+#./js/flot/curvedLines.js
 
-./js/mustache.js
 ./js/skycons.js
 ./js/nprogress.js
 ./js/jquery.jpanelmenu.min.js
@@ -45,4 +46,5 @@ CACHE MANIFEST
 http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js
 
 NETWORK:
+
 *

@@ -5392,6 +5392,71 @@
     };
     return stack;
   };
+  d3.layout.superStack = function() {
+    function superStack(data, index) {
+      var series = data.map(function(d, i) {
+        return values.call(superStack, d, i);
+      });
+      var points = series.map(function(d, i) {
+        return d.map(function(v, i) {
+          return [ x.call(superStack, v, i), y.call(superStack, v, i) ];
+        });
+      });
+      var orders = order.call(superStack, points, index);
+      series = d3.permute(series, orders);
+      points = d3.permute(points, orders);
+      var offsets = offset.call(superStack, points, index);
+      var n = series.length, m = series[0].length, i, j, o, p;
+      for (j = 0; j < m; ++j) {
+        // sort!!
+        series.sort(function(a, b) { return a[j].y - b[j].y; });
+        points.sort(function(a, b) { return a[j][1] - b[j][1]; });
+
+        out.call(superStack, series[0][j], o = offsets[j], p = points[0][j][1]);
+        for (i = 1; i < n; ++i) {
+          // difference!!
+          var p0 = points[i][j][1];
+          points[i][j][1] -= p;
+          p = p0;
+
+          out.call(superStack, series[i][j], o += points[i - 1][j][1], points[i][j][1]);
+        }
+      }
+      return data;
+    }
+    var values = d3_identity, order = d3_layout_stackOrderDefault, offset = d3_layout_stackOffsetZero, out = d3_layout_stackOut, x = d3_layout_stackX, y = d3_layout_stackY;
+    superStack.values = function(x) {
+      if (!arguments.length) return values;
+      values = x;
+      return superStack;
+    };
+    superStack.order = function(x) {
+      if (!arguments.length) return order;
+      order = typeof x === "function" ? x : d3_layout_stackOrders.get(x) || d3_layout_stackOrderDefault;
+      return superStack;
+    };
+    superStack.offset = function(x) {
+      if (!arguments.length) return offset;
+      offset = typeof x === "function" ? x : d3_layout_stackOffsets.get(x) || d3_layout_stackOffsetZero;
+      return superStack;
+    };
+    superStack.x = function(z) {
+      if (!arguments.length) return x;
+      x = z;
+      return superStack;
+    };
+    superStack.y = function(z) {
+      if (!arguments.length) return y;
+      y = z;
+      return superStack;
+    };
+    superStack.out = function(z) {
+      if (!arguments.length) return out;
+      out = z;
+      return superStack;
+    };
+    return superStack;
+  };
   var d3_layout_stackOrders = d3.map({
     "inside-out": function(data) {
       var n = data.length, i, j, max = data.map(d3_layout_stackMaxIndex), sums = data.map(d3_layout_stackReduceSum), index = d3.range(n).sort(function(a, b) {

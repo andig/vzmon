@@ -79,6 +79,7 @@ body {
   font-size: 22px; }
   .menu-trigger a {
     padding: 0;
+    z-index: 1;
     color: black; }
     .menu-trigger a span {
       position: absolute;

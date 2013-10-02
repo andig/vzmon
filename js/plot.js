@@ -116,7 +116,7 @@ function RickshawD3(element) {
 				fill: false,
 				stroke: false
 			});
-		}
+		},
 	} );
 }
 
@@ -136,10 +136,6 @@ RickshawD3.prototype.render = function(data, consumption) {
 	// use sorted data for building plot series
 	var series = [];
 
-	function mapVZtoRS(tuple) {
-		return { x: tuple[0]/1000.0, y: tuple[1] }
-	}
-
 	// in order of data provided
 	for (var channel in data) {
 		// if (typeof channels[channel].plot == 'undefined' || typeof data[channel] == "undefined") continue;
@@ -150,27 +146,31 @@ RickshawD3.prototype.render = function(data, consumption) {
 
 		series.push({
 			name: channels[channel].name,
-			data: data[channel].data.tuples.map(mapVZtoRS),
+			data: data[channel].data.tuples.map(function(tuple) {
+				return { x: tuple[0]/1000, y: tuple[1] }
+			}),
 			stroke: (stroke) ? stroke : 'steelblue',
 			color: (color) ? color : 'steelblue',
-			// TODO fixme
-			interpolation: interpolation,
+			interpolation: (interpolation) ? interpolation : 'cardinal',
 		});
 	}
 
 	// build graph
 	$(this.element).html("");
-	var graph = new Rickshaw.Graph( {
-		element: $(this.element).get(0), //document.querySelector('#chart'),
-		width: $(this.element).width(),
-		height: $(this.element).height(),
-		renderer: (consumption) ? "bar" : Rickshaw.Graph.Renderer.UnstackedArea,
-		stroke: true,
-		//preserve: true,
-		series: series
+	var graph = new Rickshaw.Graph({
+		element: 	$(this.element).get(0), //document.querySelector('#chart'),
+		width: 		$(this.element).width(),
+		height: 	$(this.element).height(),
+		series: 	series,
+		renderer: 	(consumption) ? 'bar' : Rickshaw.Graph.Renderer.UnstackedArea,
+		stroke: 	true,
+		// preserve: true,
 	});
-	if (consumption) graph.interpolation = "linear";
-	// if (consumption) graph.renderer.unstack = true;
+	if (consumption) {
+		graph.interpolation = 'linear';
+		graph.interpolation = 'step-after';
+		graph.superStack = true;
+	}
 	graph.render();
 
 	var xAxis = new Rickshaw.Graph.Axis.Time({

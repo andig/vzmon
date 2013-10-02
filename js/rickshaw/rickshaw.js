@@ -545,7 +545,10 @@ Rickshaw.Graph = function(args) {
 
 			this._validateStackable();
 
-			var layout = d3.layout.stack();
+			var layout;
+			layout = (this.superStack) ? d3.layout.superStack() : d3.layout.stack();
+			// var layout = d3.layout.stack();
+
 			layout.offset( self.offset );
 			stackedData = layout(data);
 		}

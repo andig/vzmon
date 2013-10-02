@@ -115,8 +115,9 @@ function failHandler(url, context) {
 }
 
 /**
- * Universal object filtering
- * Returns object property where  child property 'key' matches given 'val'
+ * Filter objects by properties
+ *
+ * @return  object property where child property 'key' matches given 'val'
  */
 function filterProperties(obj, key, val) {
   return(jQuery.map(obj, function(property) {
@@ -125,22 +126,12 @@ function filterProperties(obj, key, val) {
 }
 
 /**
- * Get UUID for channel with given title
- */
-function getUUID(json, title) {
-	return(jQuery.map(json.channels, function(value) {
-		return (value.title == title) ? value.uuid : null;
-	})[0])
-}
-
-/**
  * Reverse mapping uuid->channel
  */
 function getChannelFromUUID(aUUID) {
-  for (var key in uuid) {
-    if (uuid.hasOwnProperty(key) && uuid[key] == aUUID) return(key);
-  }
-  return(false);
+  return(jQuery.map(channels, function(property, idx) {
+    return (property['uuid'] == aUUID) ? idx : null;
+  })[0])
 }
 
 var cache = (function() {
