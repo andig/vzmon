@@ -1,10 +1,18 @@
 CACHE MANIFEST
-# version 19
+# version 53
 
 ./index.php
 ./img/favicon.ico
 ./img/startup.png
 ./img/startup@2x.png
+./img/startup-568h@2x.png
+./img/home-57.png
+./img/home-72.png
+./img/home-114.png
+
+./img/info.png
+./img/warn.png
+./img/error.png
 
 ./css/vzmon.css
 ./css/rickshaw.min.css
@@ -13,19 +21,23 @@ CACHE MANIFEST
 
 # scripts
 
-./js/rickshaw/rickshaw.min.js
-./js/rickshaw/d3.v2.min.js
+./js/rickshaw/rickshaw.js
+./js/rickshaw/d3.v2.js
+#./js/rickshaw/rickshaw.min.js
+#./js/rickshaw/d3.v2.min.js
 ./js/rickshaw/bullet.js
 
-./js/flot/jquery.flot.js
-./js/flot/jquery.flot.time.js
-./js/flot/curvedLines.js
+#./js/flot/jquery.flot.js
+#./js/flot/jquery.flot.time.js
+#./js/flot/curvedLines.js
 
-./js/mustache.js
 ./js/skycons.js
 ./js/nprogress.js
+./js/jquery.jpanelmenu.min.js
+./js/moment.min.js
 
 ./js/functions.js
+./js/console.js
 ./js/options.js
 ./js/plot.js
 
@@ -34,4 +46,5 @@ CACHE MANIFEST
 http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js
 
 NETWORK:
+
 *
