@@ -252,7 +252,7 @@ function updateTotals() {
 
 	for (var channel in channels) {
 		// channel without defined total
-		if (typeof channels[channel].total == "undefined") continue;
+		if (typeof (channels[channel].total || {}).value == "undefined") continue;
 
 		var totalStorage = (options.cache) ? cache.get("vzmon.totals." + channel) : false;
 		if (totalStorage) {
@@ -267,7 +267,6 @@ function updateTotals() {
 
 		// do a delta update of the totals
 		var url = vzAPI + "/data/" + channels[channel].uuid + ".json?padding=?&client=raw&from=" + channels[channel].total.atDate + "&to=today&tuples=1";
-		console.debug("[updateTotals] " + url);
 		deferred.push(
 			$.getJSON(url,
 				$.proxy(function(json) {
@@ -278,27 +277,17 @@ function updateTotals() {
 
 					var totalValue = Math.abs(channels[this.channel].total.value || 0) + Math.abs(json.data.consumption) / 1000.0;
 	 				channels[this.channel].total.value = totalValue;
+	 				channels[this.channel].total.atDate = this.today;
 
 	 				// save
-	 				cache.put("vzmon.totals." + this.channel, {
-	 					value: totalValue,
-	 					atDate: this.today,
-	 				});
-					console.debug("[updateTotals] " + this.channel + " " + JSON.stringify(cache.get("vzmon.totals." + this.channel)));
+	 				cache.put("vzmon.totals." + this.channel, channels[this.channel].total);
+					console.debug("[updateTotals] " + this.channel + " " + JSON.stringify(channels[this.channel].total));
 	 			}, {channel: channel, today: today})
 	 		).fail(failHandler(url, "updateTotals"))
 	 	)
 	}
 
-	$.when.apply(null, deferred).done(function() {
-		// wait until totals are initialized
-		for (var channel in channels) {
-			// add totals UI
-			if (typeof channels[channel].total !== "undefined") {
-				$('#channel-' + channel + ' .total').show();
-			}
-		}
-	});
+	return deferred;
 }
 
 /**
@@ -359,9 +348,13 @@ function updateChannel(channel, json) {
 	$("#channel-" + channel + " .today .value").html(n.value);
 	$("#channel-" + channel + " .today .unit").html(n.unit);
 
-	var n = formatNumber(Math.abs(channels[channel].total.value || 0) * 1000.0 + Math.abs(json.data.consumption), options.numbers.totals);
-	$("#channel-" + channel + " .total .value").html(n.value);
-	$("#channel-" + channel + " .total .unit").html(n.unit);
+    var today = moment().startOf("day").format(options.formats.date);
+	if ((channels[channel].total || {}).atDate == today) {
+		var n = formatNumber(Math.abs(channels[channel].total.value || 0) * 1000.0 + Math.abs(json.data.consumption), options.numbers.totals);
+		$("#channel-" + channel + " .total .value").html(n.value);
+		$("#channel-" + channel + " .total .unit").html(n.unit);
+		$('#channel-' + channel + ' .total').show();
+	}
 
 	$("#channel-" + channel).show();
 }
@@ -706,15 +699,15 @@ function createMenu() {
 
 function initializeSettings() {
 	var worker = function(json) {
-		console.debug("[initializeChannels] " + JSON.stringify(json));
+		// console.debug("[initializeSettings] " + JSON.stringify(json));
 
 		// get UUIDs for defined channels
 		for (var channel in channels) {
-			// console.debug("[initializeChannels] channel " + channel);
 			channels[channel].uuid = filterProperties(json.channels, 'title', channels[channel].name).uuid;
-
+			console.debug("[initializeSettings] channel " + channels[channel].name + " " + channels[channel].uuid);
 			// add channel UI
-			if (typeof channels[channel].total !== "undefined") {
+			// if (typeof channels[channel].total !== "undefined") 
+			{
 				$('#data .template').clone().appendTo('#data').attr('id', 'channel-' + channel).removeClass('template');
 				$('#channel-' + channel + ' .name').html(channel);
 				$('#channel-' + channel + ' .title').html(channels[channel].name);
@@ -724,7 +717,11 @@ function initializeSettings() {
 		// run update
 		refreshData();
 		setInterval(refreshData, (options.updateInterval || 1) * 60 * 1000); // 60s
-		updateTotals();
+
+		$.when.apply(null, updateTotals()).done(function() {
+			// redraw when totals are initialized
+			updateCurrentValues();
+		});
 
 		// assign to button
 		$("#refresh").click(refreshData);
