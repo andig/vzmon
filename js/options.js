@@ -55,7 +55,7 @@ var options = {
 
 var channels = {
   generation: {
-    name: "Photovoltaik",
+    name: "Voltaikleistung",
     total: {
     }
     plotOptions: {
