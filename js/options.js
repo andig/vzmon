@@ -6,11 +6,11 @@
 
 // path to your VZ middleware
 // ATTENTION: make sure this is a publicly accessible URL - test from browser if unsure
-var vzAPI = "http://cpuidle.dyndns.org:8038/middleware.php";
+var vzAPI = "http://demo.volkszaehler.org/middleware.php";
 
 // path to forecast.io API
 var API_KEY = "80c67e7668109f400e20c9dcc5ec0e16"; // goto forecast.io to obtain your own API key
-var COORDINATES = "52.283228,9.837533";           // your geo coordinates - find out by using Google Maps
+var COORDINATES = "52.2,9.8";           // your geo coordinates - find out by using Google Maps
 
 var weatherAPI = "https://api.forecast.io/forecast/" + API_KEY + "/" + COORDINATES + "?units=ca&exclude=flags,alerts,minutely,hourly";
 
@@ -55,9 +55,9 @@ var options = {
 
 var channels = {
   generation: {
-    name: "Erzeugung",
-    totalValue: 8840.0,
-    totalAtDate: "1.4.2013",
+    name: "Photovoltaik",
+    total: {
+    }
     plotOptions: {
       color: "orange",  // dark yellow
       shadowSize: 0,
@@ -67,49 +67,7 @@ var channels = {
         fillColor: "#fc0",
       },
     },
-    sign: -1,
   },
-
-  gesamtverbrauch: {
-    name: "Gesamtverbrauch",
-    plotOptions: {
-      color: "darkred",
-      shadowSize: 0,
-      lines: {
-        lineWidth: 2,
-        fill: true,
-        fillColor: "red",
-      },
-    },
-  },
-
-  direktverbrauch: {
-    name: "Direktverbrauch",
-    plotOptions: {
-      color: "darkgreen",
-      shadowSize: 0,
-      lines: {
-        lineWidth: 2,
-        fill: true,
-        fillColor: "green",
-      },
-    },
-  },
-
-  // plotOptions undefinied - only totals, no chart
-  bezug: {
-    name: "Bezug",
-    totalValue: eval(3152 - 9 - 21 - 5),
-    totalAtDate: "1.4.2013",
-  },
-
-  // plotOptions undefinied - only totals, no chart
-  lieferung: {
-    name: "Lieferung",
-    totalValue: eval(7418 - 11 - 14 - 7 + 30),
-    totalAtDate: "1.4.2013",
-    sign: -1,
-  }
 }
 
 // changes below this line should not be necessary
