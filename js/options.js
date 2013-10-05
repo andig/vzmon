@@ -68,7 +68,6 @@ var options = {
   
   updateInterval: 1,   // minutes
   sunriseTime: "5:00", // chart min. x axis
-  plotTuples: 100,     // number of data tuples for plot
   animate: true,       // set to false to disable weather icon animation
   maxPerf: 8.0,        // maximum theoretical solar performance (used to eliminate data issues)
   cache: true,         // if true, total & performance values as well as channel definitions are cached
@@ -88,7 +87,7 @@ var options = {
 
   //  chart settings
   plot: {
-    tuples: 200,
+    tuples: 100,     // number of data tuples for plot
     xaxis: {
       min: 5 * 3600 * 1000,
     },
