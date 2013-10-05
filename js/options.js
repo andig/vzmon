@@ -72,44 +72,35 @@ var channels = [
 
 // changes below this line should not be necessary
 
-// number formatting
-var formatCurrent = {array:true, pretty:true, si:true, unit:'W'},
-    formatConsumption = {array:true, pretty:100, decimals:1, si:true, unit:'Wh'},
-    formatTotals = {array:true, decimals:0, si:100000, unit:'Wh'};
+// general options - changes below this line should not be necessary
+var options = {
+  version: 1,          // internal version counter
+  
+  updateInterval: 1,   // minutes
+  sunriseTime: "5:00", // chart min. x axis
+  plotTuples: 100,     // number of data tuples for plot
+  animate: true,       // set to false to disable weather icon animation
+  maxPerf: 8.0,        // maximum theoretical solar performance (used to eliminate data issues)
+  cache: true,         // if true, total & performance values as well as channel definitions are cached
 
-// General chart settings
-var plotOptions = {
-  series: {
-    curvedLines: {
-      active: true, }
-    },
-  curvedLines: {
-    apply: true,
-    fit: true,
-    fitPointDist: 0.1,
+  formats: {
+    date: "DD.MM.YYYY",           // VZ date format according to http://momentjs.com/docs/#/displaying/format/
+    time: "HH:mm",                // VZ date format according to http://momentjs.com/docs/#/displaying/format/
+    dateTime: "DD.MM.YYYY+HH:mm", // VZ date format according to http://momentjs.com/docs/#/displaying/format/
   },
-  xaxis: {
-    mode: 'time',
-    timezone: 'browser',
-  	minTickSize: [1, "hour"],
-  	timeformat: "%H:%M",
-  	},
-  yaxis: {
-  	maxTickSize: 1,
-    min: 0,
-  	},
-  grid: {
-    backgroundColor: {
-      colors: ['#ffffff', '#ffffff'] },
-    borderWidth: {
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0 }
+
+  // number formatting
+  numbers: {
+    current:      {array:true, pretty:true, si:true, unit:'W'},
+    totals:       {array:true, decimals:0, si:100000, unit:'Wh'},
+    consumption:  {array:true, pretty:100, decimals:1, si:true, unit:'Wh'},
+  },
+
+  //  chart settings
+  plot: {
+    xaxis: {
+      min: 5 * 3600 * 1000,
     },
-  lines: {
-    show: true,
-    steps: false,
-    lineWidth: 1,
-    fill: false },
+  },
 };
+
