@@ -358,7 +358,7 @@ function updatePlot() {
 		var from = (mode == "fixed") ?
 						moment(options.sunriseTime, options.formats.time) :
 						moment().subtract('hours', 24);
-		dataRange = "from=" + from.format(options.formats.dateTime) + "&to=now&tuples=" + options.plotTuples;
+		dataRange = "from=" + from.format(options.formats.dateTime) + "&to=now&tuples=" + options.plot.tuples;
 	}
 	var url = vzAPI + "/data.json?padding=?&client=raw&" + dataRange;
 	// generate compound request for all channels
