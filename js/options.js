@@ -14,16 +14,6 @@ var COORDINATES = "52.2,9.8";           // your geo coordinates - find out by us
 
 var weatherAPI = "https://api.forecast.io/forecast/" + API_KEY + "/" + COORDINATES + "?units=ca&exclude=flags,alerts,minutely,hourly";
 
-// general options
-var options = {
-  updateInterval: 1,   // minutes
-  sunriseTime: "5:00", // chart min. x axis
-  plotTuples: 100,     // number of data tuples for plot
-  animate: true,       // set to false to disable weather icon animation
-  power: 6.916,        // plant power
-  maxPerf: 8.0,        // maximum theoretical solar performance (used to eliminate data issues)
-}
-
 // VZ channel information
 
 /*
@@ -98,6 +88,7 @@ var options = {
 
   //  chart settings
   plot: {
+    tuples: 200,
     xaxis: {
       min: 5 * 3600 * 1000,
     },
