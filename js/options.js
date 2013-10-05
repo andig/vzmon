@@ -53,11 +53,11 @@ var options = {
   }
 */
 
-var channels = {
-  generation: {
+var channels = [
+  { // generation
     name: "Voltaikleistung",
     total: {
-    }
+    },
     plotOptions: {
       color: "orange",  // dark yellow
       shadowSize: 0,
@@ -68,7 +68,7 @@ var channels = {
       },
     },
   },
-}
+]
 
 // changes below this line should not be necessary
 
