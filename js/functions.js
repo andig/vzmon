@@ -1,6 +1,6 @@
 /**
- * formatNumber 
- * 
+ * formatNumber
+ *
  * universal number formatting
  * adopted http://kevin.vanzonneveld.net
  *
@@ -42,7 +42,7 @@ function formatNumber(number, options) {
     unit = ((siIndex > 0) ? siPrefixes[siIndex-1] : '') + unit;
     // console.debug("[prefix] " + number +" "+ unit)
 	}
-  
+
   // pretty allows reducing decimal places for larger numbers
 	if (pretty) {
     if (Math.abs(number) >= pretty*10.0) { var prec = Math.max(prec-2,0) }
@@ -73,38 +73,17 @@ function formatNumber(number, options) {
   return s + unit;
 }
 
-function daysInMonth(month, year) {
-  return new Date(year, month+1, 0).getDate();
-}
-
-function formatDate(aDate) {
-  var date = (aDate) ? aDate : new Date();
-  // return date.toLocaleDateString("de-DE", {timeZone: "UTC", year: "numeric", month: "numeric", day: "numeric"}); 
-  var dd = date.getDate();
-  var mm = date.getMonth()+1; // January is 0!
-  var yyyy = date.getFullYear();
-  return ''+ ((dd<10)?'0'+dd:dd) +'.'+ ((mm<10)?'0'+mm:mm) +'.'+ yyyy;
-}
-
-function currentTime(aDate) {
-  var date = (aDate) ? aDate : new Date();
-  return date.toLocaleTimeString("de-DE", {timeZone: "UTC"});
-  // var hrs = date.getHours();
-  // var min = date.getMinutes();
-  // return ((hrs<10) ? '0'+hrs : hrs) + ':' + ((min<10) ? '0'+min : min);
-}
-
 function functionName() {
   console.debug(arguments.callee.caller.name);
 }
 
 // json failure handler
-function failHandler(url, context) { 
-  return function(jqXHR, textStatus, errorThrown) { 
-    // var responseText = jQuery.parseJSON(jqXHR.responseText); 
+function failHandler(url, context) {
+  return function(jqXHR, textStatus, errorThrown) {
+    // var responseText = jQuery.parseJSON(jqXHR.responseText);
     // console.error(responseText);
 
-    // log the error to the console 
+    // log the error to the console
     var msg = 'Failed retrieving ' + url;
     if (typeof context !== 'undefined') {
       msg = '[' + context + '] ' + msg;
@@ -170,15 +149,15 @@ var cache = (function() {
       var segment = segments.shift();
 
       if (root) {
-        if (validHash && segments.length == 0) {
+        if (validHash && segments.length === 0) {
           obj.hash = validHash; // add hash to leaf node
-        }     
+        }
         root[segment] = (segments.length) ? this.put(segments.join('.'), obj, validHash, root[segment] || {}) : obj;
         // console.log("[putCache] root("+segment+"): " + JSON.stringify(root));
         return (root);
       }
 
-      root = (localStorage[segment]) ? JSON.parse(localStorage[segment]) || {} : {};    
+      root = (localStorage[segment]) ? JSON.parse(localStorage[segment]) || {} : {};
       if (segments.length) {
         obj = this.put(segments.join('.'), obj, validHash, root)
       }
@@ -190,7 +169,7 @@ var cache = (function() {
   }
 }());
 
-/** 
+/**
  * Get unique hash of channel config
  */
 function getChannelHash() {

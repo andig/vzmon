@@ -19,7 +19,7 @@ body {
   font-stretch: condensed; }
 
 /* helper classes */
-.hidden {
+.hidden, .template {
   display: none; }
 .inline-block {
   display: inline-block; }
@@ -76,10 +76,10 @@ body {
 
 /* menu */
 .menu-trigger {
+    z-index: 300;
   font-size: 22px; }
   .menu-trigger a {
     padding: 0;
-    z-index: 1;
     color: black; }
     .menu-trigger a span {
       position: absolute;
