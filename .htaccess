@@ -1,1 +1,14 @@
+Allow from all
+
+Options -Indexes
+
 AddType text/cache-manifest appcache manifest
+
+<IfModule mod_headers.c>
+	Header set Access-Control-Allow-Origin *
+</IfModule>
+
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteRule ^middleware/(.*) middleware.php/$1 [L]
+</IfModule>

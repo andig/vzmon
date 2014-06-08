@@ -12,51 +12,12 @@ function Plot(element) {
 }
 
 Plot.prototype = {
-	render: function(data, sorted) {}
+	render: function(data) {}
 }
-
-
-/**
- * Flot charting implementation
- */
-function Flot(element) {
-	// Call the parent constructor
-	Plot.call(this, element);
-
-	plotOptions.yaxis.tickFormatter = this.unitFormatter;
-	$.plot(element, [{data:[]}], plotOptions);
-}
-
-Flot.prototype = new Plot();
-
-Flot.prototype.constructor = Flot;
-
-Flot.prototype.unitFormatter = function(v, axis) {
-	return (v > 0) ? formatNumber(v/1000.0, {decimals: 1}) + 'kW' : '';
-}
-
-Flot.prototype.render = function(data, sorted) {
-	// use sorted data for building plot series
-	var series = [];
-
-	// use sorted data for building plot series
-	for (var channel in sorted) {
-		var s = { data: data[channel].data.tuples };
-		// fuse series plot options
-		for (var prop in channels[channel].plotOptions) {
-			s[prop] = channels[channel].plotOptions[prop];
-		}
-		series.push(s);
-	}
-
-	$.plot($(this.element), series, plotOptions);
-}
-
 
 /**
  * Rickshaw/D3 charting implementation
  */
-
 function RickshawD3(element) {
 	// Call the parent constructor
 	Plot.call(this, element);
@@ -72,52 +33,69 @@ function RickshawD3(element) {
 				fill: false,
 				stroke: false
 			});
+		},
+	});
+
+	Rickshaw.namespace('Rickshaw.Graph.Renderer.CustomBars');
+	Rickshaw.Graph.Renderer.CustomBars = Rickshaw.Class.create(Rickshaw.Graph.Renderer.Bar, { 
+		name: 'custom-bars', 
+		render: function($super, args) { 
+			this.unstack = false;
+			$super(args); 
+			this.unstack = true;
 		}
-	} );
+	});
 }
 
 RickshawD3.prototype = new Plot();
 
 RickshawD3.prototype.constructor = RickshawD3;
 
-RickshawD3.prototype.unitFormatter = function(v) {
+RickshawD3.prototype.unitFormatterkW = function(v) {
 	return (v > 0) ? formatNumber(v/1000.0, {decimals: 1}) + 'kW' : '';
 }
 
-RickshawD3.prototype.render = function(data, sorted) {
-	// use sorted data for building plot series
+RickshawD3.prototype.unitFormatterkWh = function(v) {
+	return (v > 0) ? formatNumber(v/1000.0, {decimals: 0}) + 'kWh' : '';
+}
+
+RickshawD3.prototype.render = function(pdata, consumption) {
 	var series = [];
+	// in order of data provided
+	pdata.forEach(function(data, index) {
+		var channel = channels[index]; // channels and data use same indexing
 
-	function mapVZtoRS(tuple) {
-		return { x: tuple[0]/1000.0, y: tuple[1] }
-	}
-
-	for (var channel in sorted) {
-		var stroke = (typeof channels[channel].plotOptions.color == "undefined") ? null : channels[channel].plotOptions.color;
-		var color = (typeof channels[channel].plotOptions.lines.fillColor == "undefined" || !channels[channel].plotOptions.lines.fill) ? 'none' : channels[channel].plotOptions.lines.fillColor;
-		var interpolation = (typeof channels[channel].plotOptions.lines.interpolation == "undefined") ? 'cardinal' : channels[channel].plotOptions.lines.interpolation;
+		var stroke = (typeof channel.plot.color == 'undefined') ? null : channel.plot.color;
+		var color = (typeof channel.plot.lines.fillColor == 'undefined' || !channel.plot.lines.fill) ? 'none' : channel.plot.lines.fillColor;
+		var interpolation = (typeof channel.plot.lines.interpolation == 'undefined') ? 'cardinal' : channel.plot.lines.interpolation;
 
 		series.push({
-			name: channels[channel].name,
-			data: data[channel].data.tuples.map(mapVZtoRS),
+			name: channel.name,
+			data: data.map(function(tuple) {
+				return { x: tuple[0], y: tuple[1] }
+			}),
 			stroke: (stroke) ? stroke : 'steelblue',
 			color: (color) ? color : 'steelblue',
-			// TODO fixme
-			interpolation: interpolation,
+			interpolation: (interpolation) ? interpolation : 'cardinal',
 		});
-	}
+	});
 
 	// build graph
 	$(this.element).html("");
-	var graph = new Rickshaw.Graph( {
-		element: $(this.element).get(0), //document.querySelector('#chart'),
-		width: $(this.element).width(),
-		height: $(this.element).height(),
-		renderer: Rickshaw.Graph.Renderer.UnstackedArea,
-		stroke: true,
-		//preserve: true,
-		series: series
+	var graph = new Rickshaw.Graph({
+		element: 	$(this.element).get(0), //document.querySelector('#chart'),
+		width: 		$(this.element).width(),
+		height: 	$(this.element).height(),
+		series: 	series,
+		renderer: 	(consumption) ? 'bar' : Rickshaw.Graph.Renderer.UnstackedArea,
+		stroke: 	true,
+		// preserve: true,
 	});
+	if (consumption) {
+		graph.interpolation = 'linear';
+		graph.interpolation = 'step-after';
+		graph.superStack = true;
+	}
 	graph.render();
 
 	var xAxis = new Rickshaw.Graph.Axis.Time({
@@ -129,7 +107,7 @@ RickshawD3.prototype.render = function(data, sorted) {
 
 	var yAxis = new Rickshaw.Graph.Axis.Y({
 		graph: graph,
-		tickFormat: this.unitFormatter
+		tickFormat: (consumption) ? this.unitFormatterkWh : this.unitFormatterkW,
 	});
 	yAxis.render();
 }
